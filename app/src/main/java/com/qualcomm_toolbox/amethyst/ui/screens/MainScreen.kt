@@ -1,0 +1,475 @@
+package com.qualcomm_toolbox.amethyst.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.qualcomm_toolbox.amethyst.data.Playlist
+import com.qualcomm_toolbox.amethyst.data.Track
+import com.qualcomm_toolbox.amethyst.ui.components.MiniPlayerBar
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystAccent
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystBackground
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystBorder
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystPanel
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystPrimary
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystText
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystTextMuted
+
+@Composable
+fun MainScreen(
+    siteName: String,
+    selectedTab: Int,
+    searchQuery: String,
+    tracks: List<Track>,
+    offlineTracks: List<Track>,
+    playlists: List<Playlist>,
+    isLoading: Boolean,
+    offlineOnlyMode: Boolean,
+    currentTrack: Track?,
+    isPlaying: Boolean,
+    downloadedIds: Set<Int>,
+    downloadingIds: Set<Int>,
+    downloadProgress: Map<Int, Float>,
+    coverUrlForTrack: (Track) -> String?,
+    onTabSelected: (Int) -> Unit,
+    onSearchChange: (String) -> Unit,
+    onTrackClick: (Track) -> Unit,
+    onPlaylistClick: (Playlist) -> Unit,
+    onDownload: (Track) -> Unit,
+    onRemoveDownload: (Track) -> Unit,
+    onRefresh: () -> Unit,
+    onLogout: () -> Unit,
+    onExitOffline: () -> Unit,
+    onMiniPlayerClick: () -> Unit,
+    onTogglePlay: () -> Unit,
+) {
+    var showInfoDialog by remember { mutableStateOf(false) }
+
+    if (showInfoDialog) {
+        AlertDialog(
+            onDismissRequest = { showInfoDialog = false },
+            title = { Text("À propos") },
+            text = {
+                Column {
+                    Text("App made by La Banane Bleue")
+                    Text("Backend created by Axolat")
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "© 2025 Amethyst Music. Tous droits réservés.",
+                        fontSize = 12.sp,
+                        color = AmethystTextMuted
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoDialog = false }) {
+                    Text("Fermer", color = AmethystAccent)
+                }
+            },
+            containerColor = AmethystPanel,
+            titleContentColor = AmethystAccent,
+            textContentColor = AmethystText
+        )
+    }
+
+    Scaffold(
+        containerColor = AmethystBackground,
+        bottomBar = {
+            Column {
+                if (currentTrack != null) {
+                    MiniPlayerBar(
+                        track = currentTrack,
+                        isPlaying = isPlaying,
+                        coverUrl = coverUrlForTrack(currentTrack),
+                        onClick = onMiniPlayerClick,
+                        onPlayPause = onTogglePlay,
+                    )
+                }
+                NavigationBar(
+                    containerColor = AmethystPanel,
+                    contentColor = AmethystText,
+                ) {
+                    if (!offlineOnlyMode) {
+                        NavigationBarItem(
+                            selected = selectedTab == 0,
+                            onClick = { onTabSelected(0) },
+                            icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
+                            label = { Text("Bibliothèque") },
+                            colors = navColors(),
+                        )
+                        NavigationBarItem(
+                            selected = selectedTab == 1,
+                            onClick = { onTabSelected(1) },
+                            icon = { Icon(Icons.Default.PlaylistPlay, contentDescription = null) },
+                            label = { Text("Playlists") },
+                            colors = navColors(),
+                        )
+                    }
+                    NavigationBarItem(
+                        selected = selectedTab == 2,
+                        onClick = { onTabSelected(2) },
+                        icon = { Icon(Icons.Default.Download, contentDescription = null) },
+                        label = { Text("Hors ligne") },
+                        colors = navColors(),
+                    )
+                }
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = siteName,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = AmethystAccent,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                
+                IconButton(onClick = { showInfoDialog = true }) {
+                    Icon(Icons.Default.Info, contentDescription = "Informations", tint = AmethystTextMuted)
+                }
+
+                if (offlineOnlyMode) {
+                    IconButton(onClick = onExitOffline) {
+                        Icon(Icons.Default.CloudOff, contentDescription = "Quitter hors ligne", tint = AmethystTextMuted)
+                    }
+                } else {
+                    IconButton(onClick = onRefresh) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Actualiser", tint = AmethystTextMuted)
+                    }
+                    IconButton(onClick = onLogout) {
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Déconnexion", tint = AmethystTextMuted)
+                    }
+                }
+            }
+
+            if (selectedTab == 0 || selectedTab == 2) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchChange,
+                    placeholder = { Text("Rechercher…") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    shape = RoundedCornerShape(50),
+                    colors = fieldColors(),
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            val showLoading = isLoading &&
+                tracks.isEmpty() &&
+                offlineTracks.isEmpty() &&
+                playlists.isEmpty() &&
+                !offlineOnlyMode
+
+            if (showLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = AmethystPrimary)
+                }
+            } else when (selectedTab) {
+                0 -> TrackList(
+                    title = "Bibliothèque",
+                    tracks = tracks,
+                    downloadedIds = downloadedIds,
+                    downloadingIds = downloadingIds,
+                    downloadProgress = downloadProgress,
+                    coverUrlForTrack = coverUrlForTrack,
+                    showDownloadActions = true,
+                    onTrackClick = onTrackClick,
+                    onDownload = onDownload,
+                    onRemoveDownload = onRemoveDownload,
+                )
+                1 -> PlaylistList(
+                    playlists = playlists,
+                    onPlaylistClick = onPlaylistClick,
+                )
+                else -> TrackList(
+                    title = "Hors ligne",
+                    tracks = offlineTracks,
+                    downloadedIds = downloadedIds,
+                    downloadingIds = downloadingIds,
+                    downloadProgress = downloadProgress,
+                    coverUrlForTrack = coverUrlForTrack,
+                    showDownloadActions = false,
+                    onTrackClick = onTrackClick,
+                    onDownload = onDownload,
+                    onRemoveDownload = onRemoveDownload,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun navColors() = NavigationBarItemDefaults.colors(
+    selectedIconColor = AmethystAccent,
+    selectedTextColor = AmethystAccent,
+    unselectedIconColor = AmethystTextMuted,
+    unselectedTextColor = AmethystTextMuted,
+    indicatorColor = AmethystBorder,
+)
+
+@Composable
+private fun TrackList(
+    title: String,
+    tracks: List<Track>,
+    downloadedIds: Set<Int>,
+    downloadingIds: Set<Int>,
+    downloadProgress: Map<Int, Float>,
+    coverUrlForTrack: (Track) -> String?,
+    showDownloadActions: Boolean,
+    onTrackClick: (Track) -> Unit,
+    onDownload: (Track) -> Unit,
+    onRemoveDownload: (Track) -> Unit,
+) {
+    if (tracks.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = if (title == "Hors ligne") {
+                    "Aucun titre téléchargé.\nTéléchargez depuis la bibliothèque."
+                } else {
+                    "Aucune piste trouvée."
+                },
+                color = AmethystTextMuted,
+            )
+        }
+        return
+    }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        item {
+            Text(
+                text = title,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = AmethystText,
+            )
+        }
+        items(tracks, key = { it.id }) { track ->
+            TrackRow(
+                track = track,
+                cover = coverUrlForTrack(track),
+                isDownloaded = downloadedIds.contains(track.id),
+                isDownloading = downloadingIds.contains(track.id),
+                downloadProgress = downloadProgress[track.id],
+                showDownloadActions = showDownloadActions,
+                onClick = { onTrackClick(track) },
+                onDownload = { onDownload(track) },
+                onRemoveDownload = { onRemoveDownload(track) },
+            )
+        }
+        item { Spacer(modifier = Modifier.height(8.dp)) }
+    }
+}
+
+@Composable
+private fun TrackRow(
+    track: Track,
+    cover: String?,
+    isDownloaded: Boolean,
+    isDownloading: Boolean,
+    downloadProgress: Float?,
+    showDownloadActions: Boolean,
+    onClick: () -> Unit,
+    onDownload: () -> Unit,
+    onRemoveDownload: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = cover,
+            contentDescription = track.title,
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(AmethystBorder),
+            contentScale = ContentScale.Crop,
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = track.title,
+                fontWeight = FontWeight.Bold,
+                color = AmethystText,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${track.artist} • ${track.genre}",
+                color = AmethystTextMuted,
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (isDownloading && downloadProgress != null) {
+                LinearProgressIndicator(
+                    progress = { downloadProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp)
+                        .height(3.dp),
+                    color = AmethystAccent,
+                    trackColor = AmethystBorder,
+                )
+            }
+        }
+        when {
+            isDownloading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    color = AmethystAccent,
+                    strokeWidth = 2.dp,
+                )
+            }
+            showDownloadActions && isDownloaded -> {
+                IconButton(onClick = onRemoveDownload) {
+                    Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = AmethystTextMuted)
+                }
+            }
+            showDownloadActions -> {
+                IconButton(onClick = onDownload) {
+                    Icon(Icons.Default.Download, contentDescription = "Télécharger", tint = AmethystAccent)
+                }
+            }
+            isDownloaded -> {
+                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmethystAccent, modifier = Modifier.size(24.dp))
+            }
+            else -> {
+                Icon(Icons.Default.MusicNote, contentDescription = null, tint = AmethystPrimary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaylistList(
+    playlists: List<Playlist>,
+    onPlaylistClick: (Playlist) -> Unit,
+) {
+    if (playlists.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Aucune playlist.", color = AmethystTextMuted)
+        }
+        return
+    }
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item {
+            Text(
+                text = "Playlists",
+                modifier = Modifier.padding(8.dp),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = AmethystText,
+            )
+        }
+        items(playlists, key = { it.id }) { playlist ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(AmethystPanel)
+                    .clickable { onPlaylistClick(playlist) }
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Default.PlaylistPlay,
+                    contentDescription = null,
+                    tint = AmethystAccent,
+                    modifier = Modifier.size(40.dp),
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(playlist.name, fontWeight = FontWeight.Bold, color = AmethystText)
+                    Text(
+                        "${playlist.songIds.size} titres",
+                        color = AmethystTextMuted,
+                        fontSize = 13.sp,
+                    )
+                }
+            }
+        }
+    }
+}
