@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
 
@@ -62,15 +63,24 @@ class TrackDownloader {
             val total = body.contentLength()
             dest.parentFile?.mkdirs()
             body.byteStream().use { input ->
-                FileOutputStream(dest).use { output ->
-                    val buffer = ByteArray(8192)
+                BufferedOutputStream(FileOutputStream(dest)).use { output ->
+                    val buffer = ByteArray(65536) // Use a larger 64KB buffer
                     var downloaded = 0L
                     var read: Int
+                    var lastProgressUpdate = 0L
+                    
                     while (input.read(buffer).also { read = it } != -1) {
                         output.write(buffer, 0, read)
                         downloaded += read
+                        
                         if (total > 0) {
-                            onProgress((downloaded.toFloat() / total).coerceIn(0f, 1f))
+                            val now = System.currentTimeMillis()
+                            // Update progress at most every 200ms to avoid saturating the UI thread
+                            if (now - lastProgressUpdate > 200) {
+                                val progress = (downloaded.toFloat() / total).coerceIn(0f, 1f)
+                                onProgress(progress)
+                                lastProgressUpdate = now
+                            }
                         }
                     }
                 }

@@ -37,14 +37,27 @@ class MusicPlayer(private val appContext: Context) {
     var queue: List<Track> = emptyList()
         private set
     private var queueIndex = 0
-    var loopMode: Int = 0
-    var shuffle: Boolean = false
+    private val _loopMode = MutableStateFlow(0)
+    val loopModeFlow: StateFlow<Int> = _loopMode.asStateFlow()
+    var loopMode: Int
+        get() = _loopMode.value
+        private set(value) { _loopMode.value = value }
+
+    private val _shuffle = MutableStateFlow(false)
+    val shuffleFlow: StateFlow<Boolean> = _shuffle.asStateFlow()
+    var shuffle: Boolean
+        get() = _shuffle.value
+        private set(value) { _shuffle.value = value }
 
     private var streamUrlProvider: ((Track) -> String)? = null
     private var incrementPlayCallback: ((Int) -> Unit)? = null
     private var coverUrlProvider: ((Track) -> String?)? = null
+    private var lastClient: OkHttpClient? = null
 
     fun setOkHttpClient(client: OkHttpClient?) {
+        if (client === lastClient && client != null) return
+        lastClient = client
+
         val track = _currentTrack.value
         val wasPlaying = exoPlayer.isPlaying
         val position = exoPlayer.currentPosition

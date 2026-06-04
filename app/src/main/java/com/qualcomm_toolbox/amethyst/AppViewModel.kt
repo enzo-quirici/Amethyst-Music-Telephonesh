@@ -100,6 +100,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _downloadProgress = MutableStateFlow<Map<Int, Float>>(emptyMap())
     val downloadProgress: StateFlow<Map<Int, Float>> = _downloadProgress.asStateFlow()
 
+    private var searchJob: Job? = null
     private var progressJob: Job? = null
 
     val hasOfflineLibrary: Boolean
@@ -216,8 +217,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
-        applyFilter()
-        applyOfflineFilter()
+        searchJob?.cancel()
+
+        // Debounce search (major stutter fix)
+        searchJob = viewModelScope.launch(Dispatchers.Default) {
+            delay(200) // smooth typing feel
+            withContext(Dispatchers.Main) {
+                applyFilter()
+                applyOfflineFilter()
+            }
+        }
     }
 
     fun setSelectedTab(tab: Int) {
@@ -378,7 +387,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         serverUrl = server,
                         library = offlineLibrary,
                         onProgress = { progress ->
-                            _downloadProgress.update { map -> map + (track.id to progress) }
+                            // Throttle progress updates
+                            if (progress % 0.08f < 0.01f || progress > 0.95f) {
+                                viewModelScope.launch(Dispatchers.Main) {
+                                    _downloadProgress.update { it + (track.id to progress) }
+                                }
+                            }
                         },
                     )
                 }
@@ -429,23 +443,29 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun applyFilter() {
-        val q = _searchQuery.value.lowercase()
-        val list = _tracks.value.filter {
-            q.isEmpty() ||
-                it.title.lowercase().contains(q) ||
-                it.artist.lowercase().contains(q) ||
-                it.genre.lowercase().contains(q)
+        val q = _searchQuery.value.lowercase().trim()
+        val list = if (q.isEmpty()) {
+            _tracks.value
+        } else {
+            _tracks.value.filter {
+                it.title.contains(q, ignoreCase = true) ||
+                it.artist.contains(q, ignoreCase = true) ||
+                it.genre.contains(q, ignoreCase = true)
+            }
         }
         _filteredTracks.value = list
     }
 
     private fun applyOfflineFilter() {
-        val q = _searchQuery.value.lowercase()
-        val list = _offlineTracks.value.filter {
-            q.isEmpty() ||
-                it.title.lowercase().contains(q) ||
-                it.artist.lowercase().contains(q) ||
-                it.genre.lowercase().contains(q)
+        val q = _searchQuery.value.lowercase().trim()
+        val list = if (q.isEmpty()) {
+            _offlineTracks.value
+        } else {
+            _offlineTracks.value.filter {
+                it.title.contains(q, ignoreCase = true) ||
+                it.artist.contains(q, ignoreCase = true) ||
+                it.genre.contains(q, ignoreCase = true)
+            }
         }
         _filteredOfflineTracks.value = list
     }
@@ -512,15 +532,19 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleShuffle() = musicPlayer.toggleShuffle()
 
     private fun startProgressUpdates() {
+        progressJob?.cancel()
         progressJob = viewModelScope.launch {
             while (isActive) {
-                musicPlayer.updateProgress()
-                delay(400)
+                if (musicPlayer.isPlaying.value) {
+                    musicPlayer.updateProgress()
+                }
+                delay(1000) // 1 second - much smoother
             }
         }
     }
 
     override fun onCleared() {
+        searchJob?.cancel()
         progressJob?.cancel()
         musicPlayer.release()
         super.onCleared()

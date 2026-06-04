@@ -23,6 +23,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
+import coil.request.CachePolicy
+import okhttp3.OkHttpClient
 import coil.compose.LocalImageLoader
 import com.qualcomm_toolbox.amethyst.data.ServerPreferences
 import com.qualcomm_toolbox.amethyst.ui.screens.FullPlayerScreen
@@ -65,22 +67,22 @@ class MainActivity : ComponentActivity() {
                 val selectedTab by vm.selectedTab.collectAsState()
                 val showFullPlayer by vm.showFullPlayer.collectAsState()
                 val offlineOnlyMode by vm.offlineOnlyMode.collectAsState()
-                val downloadedIds by vm.downloadedIds.collectAsState()
-                val downloadingIds by vm.downloadingIds.collectAsState()
-                val downloadProgress by vm.downloadProgress.collectAsState()
                 val currentTrack by vm.musicPlayer.currentTrack.collectAsState()
                 val isPlaying by vm.musicPlayer.isPlaying.collectAsState()
-                val positionMs by vm.musicPlayer.positionMs.collectAsState()
-                val durationMs by vm.musicPlayer.durationMs.collectAsState()
 
-                val prefs = ServerPreferences(this@MainActivity)
                 val trustAllCerts by vm.trustAllCerts.collectAsState()
                 val context = LocalContext.current
                 val imageLoader = remember(vm.okHttpClient(), trustAllCerts) {
-                    val builder = ImageLoader.Builder(context)
-                    vm.okHttpClient()?.let { builder.okHttpClient(it) }
-                    builder.build()
+                    ImageLoader.Builder(context)
+                        .okHttpClient(vm.okHttpClient() ?: OkHttpClient())
+                        .crossfade(300)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .respectCacheHeaders(false)
+                        .build()
                 }
+
+                val prefs = remember { ServerPreferences(context) }
 
                 CompositionLocalProvider(LocalImageLoader provides imageLoader) {
                     Surface(
@@ -119,6 +121,7 @@ class MainActivity : ComponentActivity() {
                                     onChangeServer = { vm.changeServer() },
                                 )
                                 AppScreen.Main -> MainScreen(
+                                    vm = vm,
                                     siteName = siteName,
                                     selectedTab = selectedTab,
                                     searchQuery = searchQuery,
@@ -129,9 +132,6 @@ class MainActivity : ComponentActivity() {
                                     offlineOnlyMode = offlineOnlyMode,
                                     currentTrack = currentTrack,
                                     isPlaying = isPlaying,
-                                    downloadedIds = downloadedIds,
-                                    downloadingIds = downloadingIds,
-                                    downloadProgress = downloadProgress,
                                     coverUrlForTrack = vm::coverUrlForTrack,
                                     onTabSelected = vm::setSelectedTab,
                                     onSearchChange = vm::setSearchQuery,
@@ -161,21 +161,20 @@ class MainActivity : ComponentActivity() {
                                 enter = slideInVertically(initialOffsetY = { it }),
                                 exit = slideOutVertically(targetOffsetY = { it })
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .pointerInput(Unit) {
-                                            detectTapGestures { /* Consume all taps to prevent pass-through */ }
-                                        }
-                                ) {
+                                currentTrack?.let { track ->
+                                    val positionMs by vm.musicPlayer.positionMs.collectAsState()
+                                    val durationMs by vm.musicPlayer.durationMs.collectAsState()
+                                    val loopMode by vm.musicPlayer.loopModeFlow.collectAsState()
+                                    val shuffle by vm.musicPlayer.shuffleFlow.collectAsState()
+
                                     FullPlayerScreen(
-                                        track = currentTrack!!,
+                                        track = track,
                                         isPlaying = isPlaying,
                                         positionMs = positionMs,
                                         durationMs = durationMs,
-                                        loopMode = vm.musicPlayer.loopMode,
-                                        shuffle = vm.musicPlayer.shuffle,
-                                        coverUrl = vm.coverUrlForTrack(currentTrack!!),
+                                        loopMode = loopMode,
+                                        shuffle = shuffle,
+                                        coverUrl = vm.coverUrlForTrack(track),
                                         onClose = vm::closeFullPlayer,
                                         onPlayPause = vm::togglePlayPause,
                                         onNext = vm::nextTrack,

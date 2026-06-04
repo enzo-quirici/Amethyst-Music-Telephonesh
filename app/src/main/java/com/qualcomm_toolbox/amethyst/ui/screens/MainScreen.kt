@@ -41,6 +41,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,12 +49,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.qualcomm_toolbox.amethyst.AppViewModel
 import com.qualcomm_toolbox.amethyst.data.Playlist
 import com.qualcomm_toolbox.amethyst.data.Track
 import com.qualcomm_toolbox.amethyst.ui.components.MiniPlayerBar
@@ -67,6 +70,7 @@ import com.qualcomm_toolbox.amethyst.ui.theme.AmethystTextMuted
 
 @Composable
 fun MainScreen(
+    vm: AppViewModel,
     siteName: String,
     selectedTab: Int,
     searchQuery: String,
@@ -77,9 +81,6 @@ fun MainScreen(
     offlineOnlyMode: Boolean,
     currentTrack: Track?,
     isPlaying: Boolean,
-    downloadedIds: Set<Int>,
-    downloadingIds: Set<Int>,
-    downloadProgress: Map<Int, Float>,
     coverUrlForTrack: (Track) -> String?,
     onTabSelected: (Int) -> Unit,
     onSearchChange: (String) -> Unit,
@@ -93,6 +94,9 @@ fun MainScreen(
     onMiniPlayerClick: () -> Unit,
     onTogglePlay: () -> Unit,
 ) {
+    val downloadedIds by vm.downloadedIds.collectAsState()
+    val downloadingIds by vm.downloadingIds.collectAsState()
+    val downloadProgress by vm.downloadProgress.collectAsState()
     var showInfoDialog by remember { mutableStateOf(false) }
 
     if (showInfoDialog) {
@@ -310,13 +314,18 @@ private fun TrackList(
         item {
             Text(
                 text = title,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = AmethystText,
             )
         }
-        items(tracks, key = { it.id }) { track ->
+
+        items(
+            items = tracks,
+            key = { it.id },           // Important for performance
+            contentType = { "track" }
+        ) { track ->
             TrackRow(
                 track = track,
                 cover = coverUrlForTrack(track),
@@ -353,6 +362,7 @@ private fun TrackRow(
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val placeholder = rememberVectorPainter(Icons.Default.MusicNote)
         AsyncImage(
             model = cover,
             contentDescription = track.title,
@@ -361,6 +371,8 @@ private fun TrackRow(
                 .clip(RoundedCornerShape(12.dp))
                 .background(AmethystBorder),
             contentScale = ContentScale.Crop,
+            placeholder = placeholder,
+            error = placeholder,
         )
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
