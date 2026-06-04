@@ -5,12 +5,10 @@ import android.content.Intent
 import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSession.ConnectionResult
-import androidx.media3.session.LibraryResult
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.qualcomm_toolbox.amethyst.MainActivity
@@ -19,90 +17,65 @@ import com.qualcomm_toolbox.amethyst.MainActivity
 class MusicPlaybackService : MediaLibraryService() {
 
     private var mediaSession: MediaLibrarySession? = null
+    private var lastSyncTime = 0L
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "onCreate")
-        syncMediaSession()
+        Log.d(TAG, "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand action=${intent?.action}")
-        syncMediaSession()
-        
-        mediaSession?.let { session ->
-            onUpdateNotification(session, true)
-        }
-        
+        Log.d(TAG, "onStartCommand")
+        syncMediaSessionThrottled()
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
         Log.d(TAG, "onGetSession from ${controllerInfo.packageName}")
-        syncMediaSession()
+        syncMediaSessionThrottled()
         return mediaSession
     }
 
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        val player = MusicPlayer.activePlayer
-        if (player == null || !player.playWhenReady || player.playbackState == Player.STATE_IDLE) {
-            stopSelf()
-        }
-    }
+    private fun syncMediaSessionThrottled() {
+        val now = System.currentTimeMillis()
+        if (now - lastSyncTime < 2000) return // 2 second throttle - critical fix
+        lastSyncTime = now
 
-    override fun onDestroy() {
-        Log.d(TAG, "onDestroy")
-        mediaSession?.run {
-            release()
-            mediaSession = null
-        }
-        super.onDestroy()
+        syncMediaSession()
     }
 
     private fun syncMediaSession() {
         val player = MusicPlayer.activePlayer ?: return
 
-        if (mediaSession == null) {
-            Log.d(TAG, "syncMediaSession: creating new MediaLibrarySession")
-            mediaSession = MediaLibrarySession.Builder(this, player, AmethystLibraryCallback())
-                .setSessionActivity(createSessionActivityIntent())
-                .build()
-            addSession(mediaSession!!)
-        } else if (mediaSession?.player !== player) {
-            Log.d(TAG, "syncMediaSession: player instance changed, recreating session")
-            removeSession(mediaSession!!)
+        if (mediaSession == null || mediaSession?.player !== player) {
+            Log.d(TAG, "Creating new MediaLibrarySession")
+
             mediaSession?.release()
+
             mediaSession = MediaLibrarySession.Builder(this, player, AmethystLibraryCallback())
                 .setSessionActivity(createSessionActivityIntent())
                 .build()
+
             addSession(mediaSession!!)
         }
     }
 
     private fun createSessionActivityIntent(): PendingIntent {
-        val openApp = Intent(this, MainActivity::class.java).apply {
+        val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         return PendingIntent.getActivity(
-            this,
-            0,
-            openApp,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            this, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
     private class AmethystLibraryCallback : MediaLibrarySession.Callback {
         override fun onConnect(
             session: MediaSession,
-            controller: MediaSession.ControllerInfo,
-        ): ConnectionResult {
-            Log.d(TAG, "onConnect from ${controller.packageName}")
-            val commands = ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
-                .addAllCommands()
-                .build()
-            return ConnectionResult.AcceptedResultBuilder(session)
-                .setAvailablePlayerCommands(commands)
-                .build()
+            controller: MediaSession.ControllerInfo
+        ): MediaSession.ConnectionResult {
+            return MediaSession.ConnectionResult.AcceptedResultBuilder(session).build()
         }
 
         override fun onGetLibraryRoot(
@@ -110,7 +83,6 @@ class MusicPlaybackService : MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?
         ): ListenableFuture<LibraryResult<MediaItem>> {
-            Log.d(TAG, "onGetLibraryRoot from ${browser.packageName}")
             val root = MediaItem.Builder()
                 .setMediaId("root")
                 .setMediaMetadata(
@@ -122,6 +94,19 @@ class MusicPlaybackService : MediaLibraryService() {
                 .build()
             return Futures.immediateFuture(LibraryResult.ofItem(root, params))
         }
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        if (MusicPlayer.activePlayer?.playWhenReady != true) {
+            stopSelf()
+        }
+    }
+
+    override fun onDestroy() {
+        Log.d(TAG, "Service destroyed")
+        mediaSession?.release()
+        mediaSession = null
+        super.onDestroy()
     }
 
     companion object {

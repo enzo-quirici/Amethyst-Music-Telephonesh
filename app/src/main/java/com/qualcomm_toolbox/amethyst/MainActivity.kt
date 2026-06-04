@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 val imageLoader = remember(vm.okHttpClient(), trustAllCerts) {
                     ImageLoader.Builder(context)
                         .okHttpClient(vm.okHttpClient() ?: OkHttpClient())
-                        .crossfade(300)
+                        .crossfade(400)
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .respectCacheHeaders(false)

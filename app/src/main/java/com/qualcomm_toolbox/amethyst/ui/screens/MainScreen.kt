@@ -294,27 +294,21 @@ private fun TrackList(
 ) {
     if (tracks.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = if (title == "Hors ligne") {
-                    "Aucun titre téléchargé.\nTéléchargez depuis la bibliothèque."
-                } else {
-                    "Aucune piste trouvée."
-                },
-                color = AmethystTextMuted,
-            )
+            Text("Aucune piste trouvée.", color = AmethystTextMuted)
         }
         return
     }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item {
             Text(
                 text = title,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                modifier = Modifier.padding(8.dp),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = AmethystText,
@@ -323,7 +317,7 @@ private fun TrackList(
 
         items(
             items = tracks,
-            key = { it.id },           // Important for performance
+            key = { it.id },           // Critical for performance
             contentType = { "track" }
         ) { track ->
             TrackRow(

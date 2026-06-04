@@ -219,9 +219,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _searchQuery.value = query
         searchJob?.cancel()
 
-        // Debounce search (major stutter fix)
+        // Debounced + background filtering
         searchJob = viewModelScope.launch(Dispatchers.Default) {
-            delay(200) // smooth typing feel
+            delay(250)
             withContext(Dispatchers.Main) {
                 applyFilter()
                 applyOfflineFilter()
@@ -538,7 +538,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 if (musicPlayer.isPlaying.value) {
                     musicPlayer.updateProgress()
                 }
-                delay(1000) // 1 second - much smoother
+                delay(1500) // 1.5 seconds when music is playing
             }
         }
     }
