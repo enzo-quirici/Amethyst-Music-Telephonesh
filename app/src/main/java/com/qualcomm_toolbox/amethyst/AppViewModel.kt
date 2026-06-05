@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.viewModelScope
+import com.qualcomm_toolbox.amethyst.data.LyricsCache
 import com.qualcomm_toolbox.amethyst.data.OfflineLibrary
 import com.qualcomm_toolbox.amethyst.data.PersistentCookieJar
 import com.qualcomm_toolbox.amethyst.data.Playlist
@@ -44,6 +45,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val sessionPersistence = SessionPersistence(application)
     private val offlineLibrary = OfflineLibrary(application)
     private val trackDownloader = TrackDownloader()
+    private val lyricsCache = LyricsCache(application)
     private var cookieJar: PersistentCookieJar? = null
     private var client: PurpleClient? = null
     val musicPlayer = MusicPlayer(application)
@@ -305,6 +307,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun fetchLyrics(track: Track) {
+        // Check cache first
+        lyricsCache.get(track.id)?.let { cached ->
+            _lyrics.value = cached
+            _parsedLyrics.value = parseLrc(cached)
+            _isLoadingLyrics.value = false
+            return
+        }
+
         viewModelScope.launch {
             _isLoadingLyrics.value = true
             _lyrics.value = null
@@ -327,7 +337,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                             if (body != null) {
                                 val json = JSONObject(body)
                                 val lrc = json.optString("syncedLyrics").ifBlank { json.optString("plainLyrics") }
-                                _lyrics.value = lrc.ifBlank { getString(R.string.no_lyrics) }
+                                val result = lrc.ifBlank { getString(R.string.no_lyrics) }
+                                if (lrc.isNotBlank()) {
+                                    lyricsCache.put(track.id, lrc)
+                                }
+                                _lyrics.value = result
                                 _parsedLyrics.value = parseLrc(lrc)
                             }
                         } else if (response.code == 404) {
@@ -591,6 +605,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         client?.setCredentials(null, null)
         sessionPersistence.clearCredentials()
         sessionPersistence.clearAllForServer(currentServerUrl())
+        lyricsCache.clear()
         musicPlayer.stop()
         _tracks.value = emptyList()
         _playlists.value = emptyList()
