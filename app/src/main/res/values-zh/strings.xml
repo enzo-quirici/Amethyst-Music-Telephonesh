@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">Amethyst Music</string>
+    <string name="server_hint">Purple Music 服务器地址</string>
+    <string name="server_example">https://web.office-works.ch/Purple</string>
+    <string name="trust_all_certs">忽略 HTTPS 错误</string>
+    <string name="trust_all_certs_hint">推荐在 Android 6 上对自签名证书使用。</string>
+    <string name="tab_offline">离线</string>
+    <string name="listen_offline">离线收听</string>
+    <string name="download">下载</string>
+    <string name="remove_download">删除下载</string>
+    <string name="playback_channel_name">音乐播放</string>
+    <string name="playback_channel_description">播放控制与封面</string>
+
+    <string name="tab_library">媒体库</string>
+    <string name="tab_playlists">播放列表</string>
+    <string name="tab_settings">设置</string>
+    <string name="search_placeholder">搜索…</string>
+    <string name="about_title">关于</string>
+    <string name="about_made_by">App made by 高通工具箱</string>
+    <string name="about_backend">Backend created by Axolat</string>
+    <string name="about_mysql">Backend ported to MY SQL by 高通工具箱</string>
+    <string name="about_copyright">© 2026 Amethyst Music. 保留所有权利。</string>
+    <string name="close">关闭</string>
+
+    <string name="language">语言</string>
+    <string name="language_english">英语</string>
+    <string name="language_french">法语</string>
+    <string name="language_german">德语</string>
+    <string name="language_italian">意大利语</string>
+    <string name="language_spanish">西班牙语</string>
+    <string name="language_romansh">罗曼什语</string>
+    <string name="language_russian">俄语</string>
+    <string name="language_chinese">中文</string>
+    <string name="language_japanese">日语</string>
+    <string name="language_hindi">印地语</string>
+    <string name="language_mongolian">蒙古语</string>
+    <string name="refresh_cache">刷新缓存</string>
+
+    <string name="login_required">需要登录</string>
+    <string name="username">用户名</string>
+    <string name="password">密码</string>
+    <string name="login">登录</string>
+    <string name="create_account">创建账户</string>
+    <string name="change_server">更改服务器</string>
+    <string name="auto_login">自动登录…</string>
+    <string name="logging_in">登录中…</string>
+    <string name="logout">登出</string>
+    <string name="refresh">刷新</string>
+    <string name="upload">上传</string>
+    <string name="exit_offline">退出离线模式</string>
+
+    <string name="now_playing">正在播放</string>
+    <string name="close_player">关闭</string>
+    <string name="options">选项</string>
+    <string name="shuffle">随机播放</string>
+    <string name="previous">上一首</string>
+    <string name="next">下一首</string>
+    <string name="play">播放</string>
+    <string name="pause">暂停</string>
+    <string name="loop">循环播放</string>
+    <string name="no_tracks_found">未找到曲目。</string>
+    <string name="connect_server">连接您的 Purple Music 服务器</string>
+    <string name="server_url">服务器地址</string>
+    <string name="trust_all_certs_m">推荐在 Android 6 上使用（自签名证书）。</string>
+    <string name="trust_all_certs_other">适用于自签名或无效证书的服务器。</string>
+    <string name="connect">连接</string>
+    <string name="error_no_server">未配置服务器。</string>
+    <string name="error_no_offline">未发现下载的曲目。</string>
+    <string name="error_login_required_download">登录后即可下载。</string>
+    <string name="error_connection_failed">连接失败：%1$s</string>
+    <string name="error_network">网络错误</string>
+    <string name="error_download_failed">下载失败：%1$s</string>
+    <string name="error_load_failed">加载失败</string>
+    <string name="create_account_error">注册时出错</string>
+</resources>

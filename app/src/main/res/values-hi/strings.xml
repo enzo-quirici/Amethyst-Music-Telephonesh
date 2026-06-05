@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">Amethyst Music</string>
+    <string name="server_hint">पर्पल म्यूजिक सर्वर URL</string>
+    <string name="server_example">https://web.office-works.ch/Purple</string>
+    <string name="trust_all_certs">HTTPS त्रुटियों को अनदेखा करें</string>
+    <string name="trust_all_certs_hint">स्व-हस्ताक्षरित प्रमाणपत्रों के लिए Android 6 पर अनुशंसित।</string>
+    <string name="tab_offline">ऑफलाइन</string>
+    <string name="listen_offline">ऑफलाइन सुनें</string>
+    <string name="download">डाउनलोड</string>
+    <string name="remove_download">डाउनलोड हटाएं</string>
+    <string name="playback_channel_name">म्यूजिक प्लेबैक</string>
+    <string name="playback_channel_description">प्लेबैक नियंत्रण और कवर आर्ट</string>
+
+    <string name="tab_library">लाइब्रेरी</string>
+    <string name="tab_playlists">प्लेलिस्ट</string>
+    <string name="tab_settings">सेटिंग्स</string>
+    <string name="search_placeholder">खोजें…</string>
+    <string name="about_title">ऐप के बारे में</string>
+    <string name="about_made_by">App made by 高通工具箱</string>
+    <string name="about_backend">Backend created by Axolat</string>
+    <string name="about_mysql">Backend ported to MY SQL by 高通工具箱</string>
+    <string name="about_copyright">© 2026 Amethyst Music. सर्वाधिकार सुरक्षित।</string>
+    <string name="close">बंद करें</string>
+
+    <string name="language">भाषा</string>
+    <string name="language_english">अंग्रेज़ी</string>
+    <string name="language_french">फ़्रेंच</string>
+    <string name="language_german">जर्मन</string>
+    <string name="language_italian">इतालवी</string>
+    <string name="language_spanish">स्पेनिश</string>
+    <string name="language_romansh">रोमंश</string>
+    <string name="language_russian">रूसी</string>
+    <string name="language_chinese">चीनी</string>
+    <string name="language_japanese">जापानी</string>
+    <string name="language_hindi">हिन्दी</string>
+    <string name="language_mongolian">मंगोलियाई</string>
+    <string name="refresh_cache">कैश साफ़ करें</string>
+
+    <string name="login_required">लॉगिन आवश्यक है</string>
+    <string name="username">उपयोगकर्ता नाम</string>
+    <string name="password">पासवर्ड</string>
+    <string name="login">लॉगिन</string>
+    <string name="create_account">खाता बनाएं</string>
+    <string name="change_server">सर्वर बदलें</string>
+    <string name="auto_login">स्वचालित लॉगिन…</string>
+    <string name="logging_in">लॉगिन हो रहा है…</string>
+    <string name="logout">लॉगआउट</string>
+    <string name="refresh">रिफ्रेश</string>
+    <string name="upload">अपलोड</string>
+    <string name="exit_offline">ऑफलाइन से बाहर निकलें</string>
+
+    <string name="now_playing">अभी चल रहा है</string>
+    <string name="close_player">बंद करें</string>
+    <string name="options">विकल्प</string>
+    <string name="shuffle">शफल</string>
+    <string name="previous">पिछला</string>
+    <string name="next">अगला</string>
+    <string name="play">चलाएं</string>
+    <string name="pause">रोकें</string>
+    <string name="loop">लूप</string>
+    <string name="no_tracks_found">कोई गाना नहीं मिला।</string>
+    <string name="connect_server">अपने पर्पल म्यूजिक सर्वर को कनेक्ट करें</string>
+    <string name="server_url">सर्वर URL</string>
+    <string name="trust_all_certs_m">स्व-हस्ताक्षरित प्रमाणपत्रों के लिए Android 6 पर अनुशंसित।</string>
+    <string name="trust_all_certs_other">स्व-हस्ताक्षरित या अमान्य प्रमाणपत्र वाले सर्वर के लिए।</string>
+    <string name="connect">कनेक्ट करें</string>
+    <string name="error_no_server">कोई सर्वर कॉन्फ़िगर नहीं है।</string>
+    <string name="error_no_offline">कोई डाउनलोड किया हुआ गाना नहीं मिला।</string>
+    <string name="error_login_required_download">डाउनलोड करने के लिए लॉगिन आवश्यक है।</string>
+    <string name="error_connection_failed">कनेक्शन विफल: %1$s</string>
+    <string name="error_network">नेटवर्क त्रुटि</string>
+    <string name="error_download_failed">डाउनलोड विफल: %1$s</string>
+    <string name="error_load_failed">लोड करने में विफल</string>
+    <string name="create_account_error">पंजीकरण के दौरान त्रुटि</string>
+</resources>

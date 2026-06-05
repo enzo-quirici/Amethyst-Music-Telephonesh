@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">Amethyst Music</string>
+    <string name="server_hint">URL dal server Purple Music</string>
+    <string name="server_example">https://web.office-works.ch/Purple</string>
+    <string name="trust_all_certs">Ignorar eras HTTPS</string>
+    <string name="trust_all_certs_hint">Recumandà sin Android 6 per certificats auto-signads.</string>
+    <string name="tab_offline">Offline</string>
+    <string name="listen_offline">Sutgeir offline</string>
+    <string name="download">Telechargiar</string>
+    <string name="remove_download">Allontanar telechargiada</string>
+    <string name="playback_channel_name">Riproducziun musicala</string>
+    <string name="playback_channel_description">Controllas da riproducziun e cuverta</string>
+
+    <string name="tab_library">Biblioteca</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="tab_settings">Parameters</string>
+    <string name="search_placeholder">Tschertgar…</string>
+    <string name="about_title">Davart</string>
+    <string name="about_made_by">App made by 高通工具箱</string>
+    <string name="about_backend">Backend created by Axolat</string>
+    <string name="about_mysql">Backend ported to MY SQL by 高通工具箱</string>
+    <string name="about_copyright">© 2026 Amethyst Music. Tuts dretgs reservads.</string>
+    <string name="close">Serrar</string>
+
+    <string name="language">Lingua</string>
+    <string name="language_english">Englais</string>
+    <string name="language_french">Franzos</string>
+    <string name="language_german">Tudestg</string>
+    <string name="language_italian">Talian</string>
+    <string name="language_spanish">Spagnol</string>
+    <string name="language_romansh">Rumantsch</string>
+    <string name="language_russian">Russ</string>
+    <string name="language_chinese">Chinais</string>
+    <string name="language_japanese">Giapunais</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_mongolian">Mongol</string>
+    <string name="refresh_cache">Refraschar il cache</string>
+
+    <string name="login_required">Annunzia necessaria</string>
+    <string name="username">Num d\'utilisader</string>
+    <string name="password">Parola d\'ordine</string>
+    <string name="login">S\'annunziar</string>
+    <string name="create_account">Crear in conto</string>
+    <string name="change_server">Midar il server</string>
+    <string name="auto_login">Annunzia automatica…</string>
+    <string name="logging_in">S\'annunziar…</string>
+    <string name="logout">Sortir</string>
+    <string name="refresh">Refraschar</string>
+    <string name="upload">Chargiar si</string>
+    <string name="exit_offline">Sortir dad offline</string>
+
+    <string name="now_playing">RIPRODUCZIUN ACTUALA</string>
+    <string name="close_player">Serrar</string>
+    <string name="options">Opziuns</string>
+    <string name="shuffle">Schumigliar</string>
+    <string name="previous">Precedent</string>
+    <string name="next">Proxim</string>
+    <string name="play">Riproducir</string>
+    <string name="pause">Pausa</string>
+    <string name="loop">Repetir</string>
+    <string name="no_tracks_found">Nagins titels chattads.</string>
+    <string name="connect_server">Colliar Voss server Purple Music</string>
+    <string name="server_url">URL dal server</string>
+    <string name="trust_all_certs_m">Recumandà sin Android 6 (certificats auto-signads).</string>
+    <string name="trust_all_certs_other">Per servers cun certificats auto-signads u nunvalids.</string>
+    <string name="connect">Colliar</string>
+    <string name="error_no_server">Nagin server configurà.</string>
+    <string name="error_no_offline">Naginas chanzuns telechargiadas chattadas.</string>
+    <string name="error_login_required_download">Annunzia necessaria per telechargiar.</string>
+    <string name="error_connection_failed">Colliaziun betg reussida: %1$s</string>
+    <string name="error_network">errur da rait</string>
+    <string name="error_download_failed">Telechargiada betg reussida: %1$s</string>
+    <string name="error_load_failed">Errur da chargiar</string>
+    <string name="create_account_error">Errur durant l\'annunzia</string>
+</resources>

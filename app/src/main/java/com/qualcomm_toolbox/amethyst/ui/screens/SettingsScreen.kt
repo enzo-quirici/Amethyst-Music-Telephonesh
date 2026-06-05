@@ -1,5 +1,6 @@
 package com.qualcomm_toolbox.amethyst.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,16 +12,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,17 +39,34 @@ import androidx.compose.ui.unit.sp
 import com.qualcomm_toolbox.amethyst.R
 import com.qualcomm_toolbox.amethyst.ui.theme.AmethystAccent
 import com.qualcomm_toolbox.amethyst.ui.theme.AmethystPanel
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.qualcomm_toolbox.amethyst.ui.theme.AmethystText
 import com.qualcomm_toolbox.amethyst.ui.theme.AmethystTextMuted
+import com.qualcomm_toolbox.amethyst.ui.theme.AmethystBorder
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     currentLanguage: String,
     onLanguageChange: (String) -> Unit,
     onRefreshCache: () -> Unit,
 ) {
+    val languages = listOf(
+        "en" to stringResource(R.string.language_english),
+        "fr" to stringResource(R.string.language_french),
+        "de" to stringResource(R.string.language_german),
+        "it" to stringResource(R.string.language_italian),
+        "es" to stringResource(R.string.language_spanish),
+        "rm" to stringResource(R.string.language_romansh),
+        "ru" to stringResource(R.string.language_russian),
+        "zh" to stringResource(R.string.language_chinese),
+        "ja" to stringResource(R.string.language_japanese),
+        "hi" to stringResource(R.string.language_hindi),
+        "mn" to stringResource(R.string.language_mongolian),
+    )
+
+    var isExpanded by remember { mutableStateOf(false) }
+    val currentLangLabel = languages.find { it.first == currentLanguage }?.second ?: languages.first().second
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,31 +83,62 @@ fun SettingsScreen(
 
         // Language Section
         SettingsSectionTitle(stringResource(R.string.language))
-        LanguageOption(
-            label = stringResource(R.string.language_english),
-            selected = currentLanguage == "en",
-            onClick = { onLanguageChange("en") }
-        )
-        LanguageOption(
-            label = stringResource(R.string.language_french),
-            selected = currentLanguage == "fr",
-            onClick = { onLanguageChange("fr") }
-        )
+        
+        ExposedDropdownMenuBox(
+            expanded = isExpanded,
+            onExpandedChange = { isExpanded = !isExpanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = currentLangLabel,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
+                leadingIcon = { Icon(Icons.Default.Language, contentDescription = null, tint = AmethystAccent) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = AmethystText,
+                    unfocusedTextColor = AmethystText,
+                    focusedContainerColor = AmethystPanel,
+                    unfocusedContainerColor = AmethystPanel,
+                    focusedBorderColor = AmethystAccent,
+                    unfocusedBorderColor = AmethystBorder,
+                    cursorColor = AmethystAccent,
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+            )
+            ExposedDropdownMenu(
+                expanded = isExpanded,
+                onDismissRequest = { isExpanded = false },
+                modifier = Modifier.background(AmethystPanel)
+            ) {
+                languages.forEach { (code, label) ->
+                    DropdownMenuItem(
+                        text = { Text(label, color = AmethystText) },
+                        onClick = {
+                            onLanguageChange(code)
+                            isExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // Cache Section
-        SettingsSectionTitle("Cache")
+        SettingsSectionTitle(stringResource(R.string.refresh_cache).substringBefore(" "))
         SettingsItem(
             icon = Icons.Default.Refresh,
             label = stringResource(R.string.refresh_cache),
             onClick = onRefreshCache
         )
 
-        Spacer(modifier = Modifier.weight(1f))
         Spacer(modifier = Modifier.height(32.dp))
 
-        // About section (moved to text at the bottom)
+        // About section
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -122,26 +179,6 @@ fun SettingsSectionTitle(title: String) {
         color = AmethystAccent,
         modifier = Modifier.padding(bottom = 8.dp)
     )
-}
-
-@Composable
-fun LanguageOption(label: String, selected: Boolean, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = if (selected) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
-            contentDescription = null,
-            tint = if (selected) AmethystAccent else AmethystTextMuted,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(text = label, color = AmethystText, fontSize = 16.sp)
-    }
 }
 
 @Composable

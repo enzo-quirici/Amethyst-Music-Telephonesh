@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">Amethyst Music</string>
+    <string name="server_hint">URL del servidor Purple Music</string>
+    <string name="server_example">https://web.office-works.ch/Purple</string>
+    <string name="trust_all_certs">Ignorar errores HTTPS</string>
+    <string name="trust_all_certs_hint">Recomendado en Android 6 para certificados autofirmados.</string>
+    <string name="tab_offline">Sin conexión</string>
+    <string name="listen_offline">Escuchar sin conexión</string>
+    <string name="download">Descargar</string>
+    <string name="remove_download">Eliminar descarga</string>
+    <string name="playback_channel_name">Reproducción de música</string>
+    <string name="playback_channel_description">Controles de reproducción y carátula</string>
+
+    <string name="tab_library">Biblioteca</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="tab_settings">Ajustes</string>
+    <string name="search_placeholder">Buscar…</string>
+    <string name="about_title">Acerca de</string>
+    <string name="about_made_by">App made by 高通工具箱</string>
+    <string name="about_backend">Backend created by Axolat</string>
+    <string name="about_mysql">Backend ported to MY SQL by 高通工具箱</string>
+    <string name="about_copyright">© 2026 Amethyst Music. Todos los derechos reservados.</string>
+    <string name="close">Cerrar</string>
+
+    <string name="language">Idioma</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_french">Francés</string>
+    <string name="language_german">Alemán</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_romansh">Romanche</string>
+    <string name="language_russian">Ruso</string>
+    <string name="language_chinese">Chino</string>
+    <string name="language_japanese">Japonés</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_mongolian">Mongol</string>
+    <string name="refresh_cache">Refrescar caché</string>
+
+    <string name="login_required">Inicio de sesión requerido</string>
+    <string name="username">Usuario</string>
+    <string name="password">Contraseña</string>
+    <string name="login">Iniciar sesión</string>
+    <string name="create_account">Crear cuenta</string>
+    <string name="change_server">Cambiar servidor</string>
+    <string name="auto_login">Inicio de sesión automático…</string>
+    <string name="logging_in">Iniciando sesión…</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="refresh">Actualizar</string>
+    <string name="upload">Subir</string>
+    <string name="exit_offline">Salir de modo sin conexión</string>
+
+    <string name="now_playing">REPRODUCIENDO AHORA</string>
+    <string name="close_player">Cerrar</string>
+    <string name="options">Opciones</string>
+    <string name="shuffle">Aleatorio</string>
+    <string name="previous">Anterior</string>
+    <string name="next">Siguiente</string>
+    <string name="play">Reproducir</string>
+    <string name="pause">Pausa</string>
+    <string name="loop">Bucle</string>
+    <string name="no_tracks_found">No se encontraron pistas.</string>
+    <string name="connect_server">Conecta tu servidor Purple Music</string>
+    <string name="server_url">URL del servidor</string>
+    <string name="trust_all_certs_m">Recomendado en Android 6 (certificados autofirmados).</string>
+    <string name="trust_all_certs_other">Para servidores con certificado autofirmado o inválido.</string>
+    <string name="connect">Conectar</string>
+    <string name="error_no_server">No hay servidor configurado.</string>
+    <string name="error_no_offline">No se encontraron pistas descargadas.</string>
+    <string name="error_login_required_download">Se requiere iniciar sesión para descargar.</string>
+    <string name="error_connection_failed">Conexión fallida: %1$s</string>
+    <string name="error_network">error de red</string>
+    <string name="error_download_failed">Descarga fallida: %1$s</string>
+    <string name="error_load_failed">Error al cargar</string>
+    <string name="create_account_error">Error durante el registro</string>
+</resources>

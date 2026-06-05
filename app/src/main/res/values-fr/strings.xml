@@ -25,6 +25,15 @@
     <string name="language">Langue</string>
     <string name="language_english">Anglais</string>
     <string name="language_french">Français</string>
+    <string name="language_german">Allemand</string>
+    <string name="language_italian">Italien</string>
+    <string name="language_spanish">Espagnol</string>
+    <string name="language_romansh">Romanche</string>
+    <string name="language_russian">Russe</string>
+    <string name="language_chinese">Chinois</string>
+    <string name="language_japanese">Japonais</string>
+    <string name="language_hindi">Hindi</string>
+    <string name="language_mongolian">Mongol</string>
     <string name="refresh_cache">Rafraîchir le cache</string>
 
     <string name="login_required">Connexion requise</string>
