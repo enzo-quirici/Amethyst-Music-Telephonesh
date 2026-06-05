@@ -295,7 +295,16 @@ class PurpleClient(
                     depth--
                     if (depth == 0) {
                         return try {
-                            JSONArray(html.substring(arrayStart, i + 1))
+                            // index.php uses JSON_HEX_QUOT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS
+                            // which replaces " → \u0022, < → \u003C, > → \u003E, & → \u0026, ' → \u0027.
+                            // Unescape these so JSONArray can parse the string correctly.
+                            val raw = html.substring(arrayStart, i + 1)
+                                .replace("\\u0022", "\"")
+                                .replace("\\u003C", "<")
+                                .replace("\\u003E", ">")
+                                .replace("\\u0026", "&")
+                                .replace("\\u0027", "'")
+                            JSONArray(raw)
                         } catch (_: Exception) {
                             null
                         }
