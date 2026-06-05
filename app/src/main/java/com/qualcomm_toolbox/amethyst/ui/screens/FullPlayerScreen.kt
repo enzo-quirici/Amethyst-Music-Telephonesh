@@ -14,9 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -57,6 +55,8 @@ fun FullPlayerScreen(
     onToggleShuffle: () -> Unit,
     onToggleLyrics: () -> Unit,
 ) {
+    var isLyricsMaximized by remember { mutableStateOf(false) }
+
     val gradient = Brush.verticalGradient(
         colors = listOf(AmethystGradientStart, AmethystBackground),
     )
@@ -114,146 +114,150 @@ fun FullPlayerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.weight(0.2f))
+            if (!isLyricsMaximized) {
+                if (!showLyrics) Spacer(modifier = Modifier.weight(1f))
 
-            // Album Art
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1.2f)
-                    .clip(RoundedCornerShape(24.dp)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-            ) {
-                AsyncImage(
-                    model = coverUrl,
-                    contentDescription = track.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(0.2f))
-
-            // Track Info
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = track.title,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Black,
-                    color = AmethystText,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = track.artist,
-                    fontSize = 16.sp,
-                    color = AmethystAccent,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Progress Slider
-            val progress = if (durationMs > 0) positionMs.toFloat() / durationMs else 0f
-            Slider(
-                value = progress.coerceIn(0f, 1f),
-                onValueChange = { v ->
-                    if (durationMs > 0) onSeek((v * durationMs).toLong())
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = SliderDefaults.colors(
-                    thumbColor = AmethystText,
-                    activeTrackColor = AmethystText,
-                    inactiveTrackColor = AmethystText.copy(alpha = 0.2f),
-                )
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = formatTime(positionMs),
-                    color = AmethystTextMuted,
-                    fontSize = 12.sp
-                )
-                Text(
-                    text = formatTime(durationMs),
-                    color = AmethystTextMuted,
-                    fontSize = 12.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Main Controls
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onToggleShuffle) {
-                    Icon(
-                        Icons.Default.Shuffle,
-                        contentDescription = stringResource(R.string.shuffle),
-                        tint = if (shuffle) AmethystAccent else AmethystText.copy(alpha = 0.5f),
-                        modifier = Modifier.size(24.dp)
+                // Album Art
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(if (showLyrics) 0.6f else 1f)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(24.dp)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                ) {
+                    AsyncImage(
+                        model = coverUrl,
+                        contentDescription = track.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
                     )
                 }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                if (!showLyrics) Spacer(modifier = Modifier.weight(0.2f)) else Spacer(modifier = Modifier.height(16.dp))
+
+                // Track Info
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = if (showLyrics) Alignment.CenterHorizontally else Alignment.Start
                 ) {
-                    IconButton(onClick = onPrevious) {
+                    Text(
+                        text = track.title,
+                        fontSize = if (showLyrics) 20.sp else 24.sp,
+                        fontWeight = FontWeight.Black,
+                        color = AmethystText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = track.artist,
+                        fontSize = if (showLyrics) 14.sp else 16.sp,
+                        color = AmethystAccent,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Progress Slider
+                val progress = if (durationMs > 0) positionMs.toFloat() / durationMs else 0f
+                Slider(
+                    value = progress.coerceIn(0f, 1f),
+                    onValueChange = { v ->
+                        if (durationMs > 0) onSeek((v * durationMs).toLong())
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = AmethystText,
+                        activeTrackColor = AmethystText,
+                        inactiveTrackColor = AmethystText.copy(alpha = 0.2f),
+                    )
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = formatTime(positionMs),
+                        color = AmethystTextMuted,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = formatTime(durationMs),
+                        color = AmethystTextMuted,
+                        fontSize = 12.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Main Controls
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onToggleShuffle) {
                         Icon(
-                            Icons.Default.SkipPrevious,
-                            contentDescription = stringResource(R.string.previous),
-                            tint = AmethystText,
-                            modifier = Modifier.size(40.dp)
+                            Icons.Default.Shuffle,
+                            contentDescription = stringResource(R.string.shuffle),
+                            tint = if (shuffle) AmethystAccent else AmethystText.copy(alpha = 0.5f),
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    Surface(
-                        modifier = Modifier
-                            .size(72.dp)
-                            .clickable { onPlayPause() },
-                        shape = CircleShape,
-                        color = AmethystText,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        IconButton(onClick = onPrevious) {
                             Icon(
-                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                tint = AmethystBackground,
-                                modifier = Modifier.size(36.dp)
+                                Icons.Default.SkipPrevious,
+                                contentDescription = stringResource(R.string.previous),
+                                tint = AmethystText,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+
+                        Surface(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .clickable { onPlayPause() },
+                            shape = CircleShape,
+                            color = AmethystText,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                    tint = AmethystBackground,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                        }
+
+                        IconButton(onClick = onNext) {
+                            Icon(
+                                imageVector = Icons.Default.SkipNext,
+                                contentDescription = stringResource(R.string.next),
+                                tint = AmethystText,
+                                modifier = Modifier.size(40.dp)
                             )
                         }
                     }
 
-                    IconButton(onClick = onNext) {
+                    IconButton(onClick = onToggleLoop) {
                         Icon(
-                            Icons.Default.SkipNext,
-                            contentDescription = stringResource(R.string.next),
-                            tint = AmethystText,
-                            modifier = Modifier.size(40.dp)
+                            imageVector = if (loopMode == 2) Icons.Default.RepeatOne else Icons.Default.Repeat,
+                            contentDescription = stringResource(R.string.loop),
+                            tint = if (loopMode > 0) AmethystAccent else AmethystText.copy(alpha = 0.5f),
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
 
-                IconButton(onClick = onToggleLoop) {
-                    Icon(
-                        imageVector = if (loopMode == 2) Icons.Default.RepeatOne else Icons.Default.Repeat,
-                        contentDescription = stringResource(R.string.loop),
-                        tint = if (loopMode > 0) AmethystAccent else AmethystText.copy(alpha = 0.5f),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                if (!showLyrics) Spacer(modifier = Modifier.weight(1f))
             }
 
             if (showLyrics) {
@@ -264,6 +268,7 @@ fun FullPlayerScreen(
                         .padding(top = 16.dp)
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                         .background(AmethystText.copy(alpha = 0.05f))
+                        .clickable { isLyricsMaximized = !isLyricsMaximized }
                 ) {
                     if (isLoadingLyrics) {
                         CircularProgressIndicator(
@@ -282,7 +287,8 @@ fun FullPlayerScreen(
                             state = listState,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(vertical = 32.dp, horizontal = 16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            userScrollEnabled = isLyricsMaximized // Only allow manual scroll when fullscreen
                         ) {
                             itemsIndexed(parsedLyrics) { index, line ->
                                 val isCurrent = index == currentIndex
@@ -319,9 +325,16 @@ fun FullPlayerScreen(
                             )
                         }
                     }
+
+                    if (isLyricsMaximized) {
+                        IconButton(
+                            onClick = { isLyricsMaximized = false },
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                        ) {
+                            Icon(Icons.Default.FullscreenExit, contentDescription = "Exit Fullscreen", tint = AmethystText)
+                        }
+                    }
                 }
-            } else {
-                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
