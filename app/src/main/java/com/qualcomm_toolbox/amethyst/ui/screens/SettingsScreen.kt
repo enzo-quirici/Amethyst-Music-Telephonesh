@@ -141,7 +141,7 @@ fun SettingsScreen(
         // Version Section
         SettingsSectionTitle("Version")
         Text(
-            text = "0.6",
+            text = "0.5",
             color = AmethystText,
             fontSize = 16.sp,
             modifier = Modifier
