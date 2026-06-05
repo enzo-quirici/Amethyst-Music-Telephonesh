@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -48,6 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.qualcomm_toolbox.amethyst.R
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
@@ -56,6 +60,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.compose.LocalImageLoader
 import com.qualcomm_toolbox.amethyst.AppViewModel
 import com.qualcomm_toolbox.amethyst.data.Playlist
 import com.qualcomm_toolbox.amethyst.data.Track
@@ -97,34 +102,7 @@ fun MainScreen(
     val downloadedIds by vm.downloadedIds.collectAsState()
     val downloadingIds by vm.downloadingIds.collectAsState()
     val downloadProgress by vm.downloadProgress.collectAsState()
-    var showInfoDialog by remember { mutableStateOf(false) }
-
-    if (showInfoDialog) {
-        AlertDialog(
-            onDismissRequest = { showInfoDialog = false },
-            title = { Text("À propos") },
-            text = {
-                Column {
-                    Text("App made by La Banane Bleue")
-                    Text("Backend created by Axolat")
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        "© 2025 Amethyst Music. Tous droits réservés.",
-                        fontSize = 12.sp,
-                        color = AmethystTextMuted
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showInfoDialog = false }) {
-                    Text("Fermer", color = AmethystAccent)
-                }
-            },
-            containerColor = AmethystPanel,
-            titleContentColor = AmethystAccent,
-            textContentColor = AmethystText
-        )
-    }
+    val currentLanguage by vm.language.collectAsState()
 
     Scaffold(
         containerColor = AmethystBackground,
@@ -148,14 +126,14 @@ fun MainScreen(
                             selected = selectedTab == 0,
                             onClick = { onTabSelected(0) },
                             icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
-                            label = { Text("Bibliothèque") },
+                            label = { Text(stringResource(R.string.tab_library)) },
                             colors = navColors(),
                         )
                         NavigationBarItem(
                             selected = selectedTab == 1,
                             onClick = { onTabSelected(1) },
                             icon = { Icon(Icons.Default.PlaylistPlay, contentDescription = null) },
-                            label = { Text("Playlists") },
+                            label = { Text(stringResource(R.string.tab_playlists)) },
                             colors = navColors(),
                         )
                     }
@@ -163,7 +141,14 @@ fun MainScreen(
                         selected = selectedTab == 2,
                         onClick = { onTabSelected(2) },
                         icon = { Icon(Icons.Default.Download, contentDescription = null) },
-                        label = { Text("Hors ligne") },
+                        label = { Text(stringResource(R.string.tab_offline)) },
+                        colors = navColors(),
+                    )
+                    NavigationBarItem(
+                        selected = selectedTab == 3,
+                        onClick = { onTabSelected(3) },
+                        icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                        label = { Text(stringResource(R.string.tab_settings)) },
                         colors = navColors(),
                     )
                 }
@@ -192,20 +177,16 @@ fun MainScreen(
                     modifier = Modifier.weight(1f),
                 )
                 
-                IconButton(onClick = { showInfoDialog = true }) {
-                    Icon(Icons.Default.Info, contentDescription = "Informations", tint = AmethystTextMuted)
-                }
-
                 if (offlineOnlyMode) {
                     IconButton(onClick = onExitOffline) {
-                        Icon(Icons.Default.CloudOff, contentDescription = "Quitter hors ligne", tint = AmethystTextMuted)
+                        Icon(Icons.Default.CloudOff, contentDescription = stringResource(R.string.exit_offline), tint = AmethystTextMuted)
                     }
                 } else {
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Actualiser", tint = AmethystTextMuted)
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh), tint = AmethystTextMuted)
                     }
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Déconnexion", tint = AmethystTextMuted)
+                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = stringResource(R.string.logout), tint = AmethystTextMuted)
                     }
                 }
             }
@@ -214,7 +195,7 @@ fun MainScreen(
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = onSearchChange,
-                    placeholder = { Text("Rechercher…") },
+                    placeholder = { Text(stringResource(R.string.search_placeholder)) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                     singleLine = true,
                     modifier = Modifier
@@ -238,7 +219,7 @@ fun MainScreen(
                 }
             } else when (selectedTab) {
                 0 -> TrackList(
-                    title = "Bibliothèque",
+                    title = stringResource(R.string.tab_library),
                     tracks = tracks,
                     downloadedIds = downloadedIds,
                     downloadingIds = downloadingIds,
@@ -253,8 +234,8 @@ fun MainScreen(
                     playlists = playlists,
                     onPlaylistClick = onPlaylistClick,
                 )
-                else -> TrackList(
-                    title = "Hors ligne",
+                2 -> TrackList(
+                    title = stringResource(R.string.tab_offline),
                     tracks = offlineTracks,
                     downloadedIds = downloadedIds,
                     downloadingIds = downloadingIds,
@@ -264,6 +245,11 @@ fun MainScreen(
                     onTrackClick = onTrackClick,
                     onDownload = onDownload,
                     onRemoveDownload = onRemoveDownload,
+                )
+                3 -> SettingsScreen(
+                    currentLanguage = currentLanguage,
+                    onLanguageChange = vm::setLanguage,
+                    onRefreshCache = vm::refreshCache
                 )
             }
         }
@@ -304,6 +290,7 @@ private fun TrackList(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(bottom = 80.dp), // pour le mini-player
     ) {
         item {
             Text(
@@ -318,7 +305,7 @@ private fun TrackList(
         items(
             items = tracks,
             key = { it.id },           // Critical for performance
-            contentType = { "track" }
+            contentType = { "track_item" }
         ) { track ->
             TrackRow(
                 track = track,
@@ -332,7 +319,6 @@ private fun TrackList(
                 onRemoveDownload = { onRemoveDownload(track) },
             )
         }
-        item { Spacer(modifier = Modifier.height(8.dp)) }
     }
 }
 
@@ -367,6 +353,7 @@ private fun TrackRow(
             contentScale = ContentScale.Crop,
             placeholder = placeholder,
             error = placeholder,
+            imageLoader = LocalImageLoader.current,
         )
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -396,25 +383,36 @@ private fun TrackRow(
                 )
             }
         }
-        when {
-            isDownloading -> {
+
+        val actionContent = remember(isDownloading, isDownloaded, showDownloadActions) {
+            when {
+                isDownloading -> "loading"
+                showDownloadActions && isDownloaded -> "remove"
+                showDownloadActions -> "download"
+                isDownloaded -> "check"
+                else -> "music"
+            }
+        }
+
+        when (actionContent) {
+            "loading" -> {
                 CircularProgressIndicator(
                     modifier = Modifier.size(28.dp),
                     color = AmethystAccent,
                     strokeWidth = 2.dp,
                 )
             }
-            showDownloadActions && isDownloaded -> {
+            "remove" -> {
                 IconButton(onClick = onRemoveDownload) {
                     Icon(Icons.Default.Delete, contentDescription = "Supprimer", tint = AmethystTextMuted)
                 }
             }
-            showDownloadActions -> {
+            "download" -> {
                 IconButton(onClick = onDownload) {
                     Icon(Icons.Default.Download, contentDescription = "Télécharger", tint = AmethystAccent)
                 }
             }
-            isDownloaded -> {
+            "check" -> {
                 Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AmethystAccent, modifier = Modifier.size(24.dp))
             }
             else -> {
@@ -443,7 +441,7 @@ private fun PlaylistList(
     ) {
         item {
             Text(
-                text = "Playlists",
+                text = stringResource(R.string.tab_playlists),
                 modifier = Modifier.padding(8.dp),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,

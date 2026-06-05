@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Amethyst Music</string>
+    <string name="server_hint">URL du serveur Purple Music</string>
+    <string name="server_example">https://web.office-works.ch/Purple</string>
+    <string name="trust_all_certs">Ignorer les erreurs HTTPS</string>
+    <string name="trust_all_certs_hint">Recommandé sur Android 6 pour certificats auto-signés.</string>
+    <string name="tab_offline">Hors ligne</string>
+    <string name="listen_offline">Écouter hors ligne</string>
+    <string name="download">Télécharger</string>
+    <string name="remove_download">Supprimer le téléchargement</string>
+    <string name="playback_channel_name">Lecture musicale</string>
+    <string name="playback_channel_description">Contrôles de lecture et pochette</string>
+
+    <string name="tab_library">Bibliothèque</string>
+    <string name="tab_playlists">Playlists</string>
+    <string name="tab_settings">Paramètres</string>
+    <string name="search_placeholder">Rechercher…</string>
+    <string name="about_title">À propos</string>
+    <string name="about_made_by">App made by La Banane Bleue</string>
+    <string name="about_backend">Backend created by Axolat</string>
+    <string name="about_copyright">© 2025 Amethyst Music. Tous droits réservés.</string>
+    <string name="close">Fermer</string>
+
+    <string name="language">Langue</string>
+    <string name="language_english">Anglais</string>
+    <string name="language_french">Français</string>
+    <string name="refresh_cache">Rafraîchir le cache</string>
+
+    <string name="login_required">Connexion requise</string>
+    <string name="username">Utilisateur</string>
+    <string name="password">Mot de passe</string>
+    <string name="login">Connexion</string>
+    <string name="create_account">Créer un compte</string>
+    <string name="change_server">Changer de serveur</string>
+    <string name="auto_login">Connexion automatique…</string>
+    <string name="logging_in">Connexion…</string>
+    <string name="logout">Déconnexion</string>
+    <string name="refresh">Actualiser</string>
+    <string name="exit_offline">Quitter hors ligne</string>
+</resources>

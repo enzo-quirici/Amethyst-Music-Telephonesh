@@ -23,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.ImageLoader
+import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import okhttp3.OkHttpClient
 import coil.compose.LocalImageLoader
@@ -75,10 +76,15 @@ class MainActivity : ComponentActivity() {
                 val imageLoader = remember(vm.okHttpClient(), trustAllCerts) {
                     ImageLoader.Builder(context)
                         .okHttpClient(vm.okHttpClient() ?: OkHttpClient())
-                        .crossfade(400)
+                        .crossfade(300)
                         .memoryCachePolicy(CachePolicy.ENABLED)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .respectCacheHeaders(false)
+                        .memoryCache {
+                            MemoryCache.Builder(context)
+                                .maxSizePercent(0.25) // 25% de la mémoire disponible
+                                .build()
+                        }
                         .build()
                 }
 

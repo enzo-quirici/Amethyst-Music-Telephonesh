@@ -20,6 +20,12 @@ class ServerPreferences(context: Context) {
             prefs.edit().putString(KEY_USERNAME, value).apply()
         }
 
+    var language: String
+        get() = prefs.getString(KEY_LANGUAGE, "fr") ?: "fr"
+        set(value) {
+            prefs.edit().putString(KEY_LANGUAGE, value).apply()
+        }
+
     val hasServer: Boolean get() = !serverUrl.isNullOrBlank()
 
     /** When true, accepts self-signed / invalid HTTPS certs (needed on some Android 6 devices). */
@@ -36,6 +42,7 @@ class ServerPreferences(context: Context) {
         private const val PREFS_NAME = "amethyst_prefs"
         private const val KEY_SERVER = "server_url"
         private const val KEY_USERNAME = "username"
+        private const val KEY_LANGUAGE = "language"
         private const val KEY_TRUST_ALL_CERTS = "trust_all_certs"
 
         fun normalizeServerUrl(raw: String): String {

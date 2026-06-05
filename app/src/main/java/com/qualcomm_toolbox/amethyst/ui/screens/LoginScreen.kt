@@ -25,12 +25,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.qualcomm_toolbox.amethyst.R
 import com.qualcomm_toolbox.amethyst.ui.components.AuthScreenLayout
 import com.qualcomm_toolbox.amethyst.ui.components.authFieldColors
 import com.qualcomm_toolbox.amethyst.ui.components.authFieldShape
@@ -64,7 +66,7 @@ fun LoginScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = AmethystPrimary)
                     Text(
-                        text = if (password.isEmpty()) "Connexion automatique…" else "Connexion…",
+                        text = if (password.isEmpty()) stringResource(R.string.auto_login) else stringResource(R.string.logging_in),
                         color = AmethystTextMuted,
                         modifier = Modifier.padding(top = 16.dp),
                     )
@@ -88,7 +90,7 @@ fun LoginScreen(
                 textAlign = TextAlign.Center,
             )
             Text(
-                text = "Connexion requise",
+                text = stringResource(R.string.login_required),
                 color = AmethystTextMuted,
                 modifier = Modifier.padding(top = 8.dp, bottom = 32.dp),
             )
@@ -96,7 +98,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Utilisateur") },
+                label = { Text(stringResource(R.string.username)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = authFieldShape,
@@ -106,7 +108,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Mot de passe") },
+                label = { Text(stringResource(R.string.password)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = authFieldShape,
@@ -142,7 +144,7 @@ fun LoginScreen(
                         strokeWidth = 2.dp,
                     )
                 } else {
-                    Text("Connexion", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.login), fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -156,7 +158,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = AmethystAccent),
             ) {
-                Text("Créer un compte")
+                Text(stringResource(R.string.create_account))
             }
 
             if (hasOfflineLibrary) {
@@ -170,12 +172,12 @@ fun LoginScreen(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = AmethystTextMuted),
                 ) {
-                    Text("Écouter hors ligne")
+                    Text(stringResource(R.string.listen_offline))
                 }
             }
 
             TextButton(onClick = onChangeServer, modifier = Modifier.padding(top = 16.dp)) {
-                Text("Changer de serveur", color = AmethystTextMuted)
+                Text(stringResource(R.string.change_server), color = AmethystTextMuted)
             }
         }
     }

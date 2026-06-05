@@ -2,6 +2,8 @@ package com.qualcomm_toolbox.amethyst
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.viewModelScope
 import com.qualcomm_toolbox.amethyst.data.OfflineLibrary
 import com.qualcomm_toolbox.amethyst.data.PersistentCookieJar
@@ -85,6 +87,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedTab = MutableStateFlow(0)
     val selectedTab: StateFlow<Int> = _selectedTab.asStateFlow()
 
+    private val _language = MutableStateFlow(prefs.language)
+    val language: StateFlow<String> = _language.asStateFlow()
+
     private val _showFullPlayer = MutableStateFlow(false)
     val showFullPlayer: StateFlow<Boolean> = _showFullPlayer.asStateFlow()
 
@@ -107,6 +112,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         get() = offlineLibrary.hasTracksForServer(prefs.serverUrl)
 
     init {
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(prefs.language))
         prefs.serverUrl?.let { url ->
             initClient(url, prefs.trustAllCertificates)
             tryRestoreSession()
@@ -231,6 +237,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setSelectedTab(tab: Int) {
         _selectedTab.value = tab
+    }
+
+    fun setLanguage(lang: String) {
+        prefs.language = lang
+        _language.value = lang
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(lang))
+    }
+
+    fun refreshCache() {
+        loadLibrary()
     }
 
     fun openFullPlayer() {
