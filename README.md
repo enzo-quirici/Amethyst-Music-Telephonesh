@@ -40,7 +40,7 @@ Amethyst Music is a modern, feature-rich Android music player client designed to
 
 ## 🤝 Credits
 
-- **App Developer**: [高通工具箱](https://github.com/your-profile) (Qualcomm Toolbox)
+- **App Developer**: [高通工具箱](https://github.com/enzo-quirici) (Qualcomm Toolbox)
 - **Backend Creator**: Axolat
 - **MySQL Backend Port**: 高通工具箱
 
