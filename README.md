@@ -7,10 +7,26 @@ Amethyst Music is a modern, feature-rich Android music player client designed to
 - 🎵 **High-Quality Playback**: Powered by Android Media3 (ExoPlayer).
 - 📥 **Offline Mode**: Download your favorite tracks and listen without an internet connection.
 - 🎨 **Material 3 UI**: Modern, dynamic interface with support for Dark Mode.
-- 🌐 **Multi-language Support**: Available in English, French, German, Italian, Spanish, Romansh, Russian, Chinese, Japanese, Hindi, and Mongolian.
+- 🌍 **Multi-language Support**: Fully translated into 11 languages.
 - 🔍 **Smart Search**: Quickly find tracks in your library.
 - 📜 **Playlists**: Manage and listen to your custom playlists.
 - 🛡️ **Secure Connectivity**: Support for custom server URLs and options to bypass HTTPS errors for self-signed certificates.
+
+## 🌍 Supported Languages
+
+Amethyst Music supports the following languages:
+
+- 🇺🇸 **English**
+- 🇫🇷 **French** (Français)
+- 🇩🇪 **German** (Deutsch)
+- 🇮🇹 **Italian** (Italiano)
+- 🇪🇸 **Spanish** (Español)
+- 🇨🇭 **Romansh** (Rumantsch)
+- 🇷🇺 **Russian** (Русский)
+- 🇨🇳 **Chinese** (中文)
+- 🇯🇵 **Japanese** (日本語)
+- 🇮🇳 **Hindi** (हिन्दी)
+- 🇲🇳 **Mongolian** (Монгол)
 
 ## 🛠️ Tech Stack
 
