@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="Amethyst Music">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-06-01T19:24:18.699054Z">
+        <DropdownSelection timestamp="2026-06-06T19:48:46.803742Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=ec36f498" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=00248359C001397" />
             </handle>
           </Target>
         </DropdownSelection>
