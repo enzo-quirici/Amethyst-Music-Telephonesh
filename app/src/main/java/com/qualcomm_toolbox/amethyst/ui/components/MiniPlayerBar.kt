@@ -1,6 +1,7 @@
 package com.qualcomm_toolbox.amethyst.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,12 +68,14 @@ fun MiniPlayerBar(
                 color = AmethystText,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.basicMarquee()
             )
             Text(
                 text = track.artist,
                 color = AmethystAccent,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.basicMarquee()
             )
         }
         IconButton(onClick = onPlayPause) {

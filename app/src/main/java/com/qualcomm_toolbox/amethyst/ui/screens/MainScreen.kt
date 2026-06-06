@@ -269,7 +269,6 @@ fun MainScreen(
 
             when (selectedTab) {
                 0 -> TrackList(
-                    title = stringResource(R.string.tab_library),
                     tracks = tracks,
                     downloadedIds = downloadedIds,
                     downloadingIds = downloadingIds,
@@ -287,7 +286,6 @@ fun MainScreen(
                     onDeletePlaylist = { vm.deletePlaylist(it) }
                 )
                 2 -> TrackList(
-                    title = stringResource(R.string.tab_offline),
                     tracks = offlineTracks,
                     downloadedIds = downloadedIds,
                     downloadingIds = downloadingIds,
@@ -319,7 +317,6 @@ private fun navColors() = NavigationBarItemDefaults.colors(
 
 @Composable
 private fun TrackList(
-    title: String,
     tracks: List<Track>,
     downloadedIds: Set<Int>,
     downloadingIds: Set<Int>,
@@ -338,16 +335,6 @@ private fun TrackList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(bottom = 80.dp), // pour le mini-player
     ) {
-        item {
-            Text(
-                text = "$title (${tracks.size})",
-                modifier = Modifier.padding(8.dp),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = AmethystText,
-            )
-        }
-
         if (tracks.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -521,15 +508,6 @@ private fun PlaylistList(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(bottom = 80.dp),
     ) {
-        item {
-            Text(
-                text = stringResource(R.string.tab_playlists),
-                modifier = Modifier.padding(8.dp),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = AmethystText,
-            )
-        }
         items(playlists, key = { it.id }) { playlist ->
             var showMenu by remember { mutableStateOf(false) }
 
