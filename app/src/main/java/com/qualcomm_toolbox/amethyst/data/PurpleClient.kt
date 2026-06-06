@@ -139,26 +139,40 @@ class PurpleClient(
     ) {
         val url = apiUrl("upload")
 
-        val body = MultipartBody.Builder().setType(MultipartBody.FORM)
+        // Build multipart body with text fields FIRST for better server compatibility
+        val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart("title", title)
             .addFormDataPart("artist", artist)
             .addFormDataPart("genre", genre)
-            .addFormDataPart("music", musicName, musicBytes.toRequestBody("audio/mpeg".toMediaType()))
-            .apply {
-                currentUsername?.let { addFormDataPart("username", it) }
-                currentPassword?.let { addFormDataPart("password", it) }
-                if (coverBytes != null && coverName != null) {
-                    addFormDataPart("cover", coverName, coverBytes.toRequestBody("image/*".toMediaType()))
-                }
-            }
-            .build()
 
+        currentUsername?.let { builder.addFormDataPart("username", it) }
+        currentPassword?.let { builder.addFormDataPart("password", it) }
+
+        // Files LAST
+        builder.addFormDataPart(
+            "music",
+            musicName,
+            musicBytes.toRequestBody("application/octet-stream".toMediaType())
+        )
+
+        if (coverBytes != null && coverName != null) {
+            builder.addFormDataPart(
+                "cover",
+                coverName,
+                coverBytes.toRequestBody("image/*".toMediaType())
+            )
+        }
+
+        val body = builder.build()
         val request = Request.Builder().url(url).post(body).build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw PurpleException("Upload failed")
+            if (!response.isSuccessful) throw PurpleException("Upload failed (HTTP ${response.code})")
             val bodyStr = response.body?.string() ?: ""
-            if (bodyStr.contains("\"status\":\"error\"")) throw PurpleException("Upload error")
+            if (bodyStr.contains("\"status\":\"error\"")) {
+                val msg = JSONObject(bodyStr).optString("message", "Upload error")
+                throw PurpleException(msg)
+            }
         }
     }
 
