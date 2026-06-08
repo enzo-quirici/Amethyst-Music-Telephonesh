@@ -49,7 +49,5 @@ Amethyst Music supports the following languages:
 
 ## 📋 To-Do
 
-- [ ] Admin Features
 - [ ] UI Customization options
 - [ ] Bug Fixes
-- [ ] Comprehensive Testing
