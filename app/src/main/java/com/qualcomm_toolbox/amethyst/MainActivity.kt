@@ -127,43 +127,52 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onChangeServer = { vm.changeServer() },
                                 )
-                                AppScreen.Main -> MainScreen(
-                                    vm = vm,
-                                    siteName = siteName,
-                                    selectedTab = selectedTab,
-                                    searchQuery = searchQuery,
-                                    tracks = filteredTracks,
-                                    offlineTracks = filteredOfflineTracks,
-                                    playlists = playlists,
-                                    isLoading = isLoading,
-                                    offlineOnlyMode = offlineOnlyMode,
-                                    currentTrack = currentTrack,
-                                    isPlaying = isPlaying,
-                                    coverUrlForTrack = vm::coverUrlForTrack,
-                                    onTabSelected = vm::setSelectedTab,
-                                    onSearchChange = vm::setSearchQuery,
-                                    onTrackClick = { track ->
-                                        notificationPermission.requestIfNeeded()
-                                        vm.playTrack(track)
-                                    },
-                                    onPlaylistClick = { playlist ->
-                                        notificationPermission.requestIfNeeded()
-                                        vm.playPlaylist(playlist)
-                                    },
-                                    onDownload = vm::downloadTrack,
-                                    onRemoveDownload = vm::removeDownload,
-                                    onRefresh = vm::loadLibrary,
-                                    onLogout = vm::logout,
-                                    onExitOffline = vm::exitOfflineMode,
-                                    onMiniPlayerClick = vm::openFullPlayer,
-                                    onTogglePlay = {
-                                        notificationPermission.requestIfNeeded()
-                                        vm.togglePlayPause()
-                                    },
-                                    onUploadTrack = { t, a, g, m, mn, c, cn ->
-                                        vm.uploadTrack(t, a, g, m, mn, c, cn)
-                                    },
-                                )
+                                AppScreen.Main -> {
+                                    val homeRecommended by vm.homeRecommendedTracks.collectAsState()
+                                    val homePopular by vm.homePopularTracks.collectAsState()
+                                    val homeHiddenGems by vm.homeHiddenGems.collectAsState()
+
+                                    MainScreen(
+                                        vm = vm,
+                                        siteName = siteName,
+                                        selectedTab = selectedTab,
+                                        searchQuery = searchQuery,
+                                        tracks = filteredTracks,
+                                        offlineTracks = filteredOfflineTracks,
+                                        playlists = playlists,
+                                        isLoading = isLoading,
+                                        offlineOnlyMode = offlineOnlyMode,
+                                        currentTrack = currentTrack,
+                                        isPlaying = isPlaying,
+                                        coverUrlForTrack = vm::coverUrlForTrack,
+                                        onTabSelected = vm::setSelectedTab,
+                                        onSearchChange = vm::setSearchQuery,
+                                        onTrackClick = { track ->
+                                            notificationPermission.requestIfNeeded()
+                                            vm.playTrack(track)
+                                        },
+                                        onPlaylistClick = { playlist ->
+                                            notificationPermission.requestIfNeeded()
+                                            vm.playPlaylist(playlist)
+                                        },
+                                        onDownload = vm::downloadTrack,
+                                        onRemoveDownload = vm::removeDownload,
+                                        onRefresh = vm::loadLibrary,
+                                        onLogout = vm::logout,
+                                        onExitOffline = vm::exitOfflineMode,
+                                        onMiniPlayerClick = vm::openFullPlayer,
+                                        onTogglePlay = {
+                                            notificationPermission.requestIfNeeded()
+                                            vm.togglePlayPause()
+                                        },
+                                        onUploadTrack = { t, a, g, m, mn, c, cn ->
+                                            vm.uploadTrack(t, a, g, m, mn, c, cn)
+                                        },
+                                        homeRecommended = homeRecommended,
+                                        homePopular = homePopular,
+                                        homeHiddenGems = homeHiddenGems,
+                                    )
+                                }
                             }
 
                             val trackToAddToPlaylist by vm.trackToAddToPlaylist.collectAsState()

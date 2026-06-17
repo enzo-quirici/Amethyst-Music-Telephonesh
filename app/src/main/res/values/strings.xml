@@ -11,6 +11,11 @@
     <string name="playback_channel_name">Music playback</string>
     <string name="playback_channel_description">Playback controls and cover art</string>
 
+    <string name="tab_home">Home</string>
+    <string name="home_for_you">Recommended for You</string>
+    <string name="home_popular">Popular Hits</string>
+    <string name="home_hidden_gems">Hidden Gems</string>
+
     <string name="tab_library">Library</string>
     <string name="tab_playlists">Playlists</string>
     <string name="tab_settings">Settings</string>

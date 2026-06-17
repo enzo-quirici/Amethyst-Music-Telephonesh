@@ -132,6 +132,9 @@ fun MainScreen(
     onMiniPlayerClick: () -> Unit,
     onTogglePlay: () -> Unit,
     onUploadTrack: (String, String, String, ByteArray, String, ByteArray?, String?) -> Unit,
+    homeRecommended: List<Track> = emptyList(),
+    homePopular: List<Track> = emptyList(),
+    homeHiddenGems: List<Track> = emptyList(),
 ) {
     val downloadedIds by vm.downloadedIds.collectAsState()
     val downloadingIds by vm.downloadingIds.collectAsState()
@@ -208,37 +211,44 @@ fun MainScreen(
                     if (!offlineOnlyMode) {
                         NavigationBarItem(
                             selected = selectedTab == 0,
+                            onClick = { onTabSelected(0) },
+                            icon = { Icon(Icons.Default.MusicNote, contentDescription = null) },
+                            label = { Text(stringResource(R.string.tab_home)) },
+                            colors = navColors(),
+                        )
+                        NavigationBarItem(
+                            selected = selectedTab == 1,
                             onClick = { 
                                 vm.closePlaylist()
-                                onTabSelected(0) 
+                                onTabSelected(1) 
                             },
                             icon = { Icon(Icons.Default.LibraryMusic, contentDescription = null) },
                             label = { Text(stringResource(R.string.tab_library)) },
                             colors = navColors(),
                         )
                         NavigationBarItem(
-                            selected = selectedTab == 1,
-                            onClick = { onTabSelected(1) },
+                            selected = selectedTab == 2,
+                            onClick = { onTabSelected(2) },
                             icon = { Icon(Icons.AutoMirrored.Filled.PlaylistPlay, contentDescription = null) },
                             label = { Text(stringResource(R.string.tab_playlists)) },
                             colors = navColors(),
                         )
                     }
                     NavigationBarItem(
-                        selected = selectedTab == 2,
+                        selected = selectedTab == 3,
                         onClick = { 
                             vm.closePlaylist()
-                            onTabSelected(2) 
+                            onTabSelected(3) 
                         },
                         icon = { Icon(Icons.Default.Download, contentDescription = null) },
                         label = { Text(stringResource(R.string.tab_offline)) },
                         colors = navColors(),
                     )
                     NavigationBarItem(
-                        selected = selectedTab == 3,
+                        selected = selectedTab == 4,
                         onClick = { 
                             vm.closePlaylist()
-                            onTabSelected(3) 
+                            onTabSelected(4) 
                         },
                         icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                         label = { Text(stringResource(R.string.tab_settings)) },
@@ -270,7 +280,7 @@ fun MainScreen(
                     modifier = Modifier.weight(1f),
                 )
                 
-                if (currentPlaylist != null && selectedTab == 1) {
+                if (currentPlaylist != null && selectedTab == 2) {
                     IconButton(onClick = { vm.closePlaylist() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = AmethystTextMuted)
                     }
@@ -281,7 +291,7 @@ fun MainScreen(
                         Icon(Icons.Default.CloudOff, contentDescription = stringResource(R.string.exit_offline), tint = AmethystTextMuted)
                     }
                 } else {
-                    if (selectedTab == 1) {
+                    if (selectedTab == 2) {
                         IconButton(onClick = { showPlaylistCreateDialog = true }) {
                             Icon(Icons.Default.Add, contentDescription = stringResource(R.string.create_playlist), tint = AmethystTextMuted)
                         }
@@ -298,7 +308,7 @@ fun MainScreen(
                 }
             }
 
-            if (selectedTab == 0 || selectedTab == 2) {
+            if (selectedTab == 1 || selectedTab == 3) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -348,7 +358,14 @@ fun MainScreen(
             }
 
             when (selectedTab) {
-                0 -> TrackList(
+                0 -> HomeScreen(
+                    recommended = homeRecommended,
+                    popular = homePopular,
+                    hiddenGems = homeHiddenGems,
+                    coverUrlForTrack = coverUrlForTrack,
+                    onTrackClick = onTrackClick
+                )
+                1 -> TrackList(
                     tracks = tracks,
                     currentTrack = currentTrack,
                     isPlaying = isPlaying,
@@ -364,7 +381,7 @@ fun MainScreen(
                     adminModeEnabled = adminModeEnabled,
                     onEditTrack = { trackToEdit = it }
                 )
-                1 -> if (currentPlaylist != null) {
+                2 -> if (currentPlaylist != null) {
                     TrackList(
                         tracks = currentPlaylistTracks,
                         currentTrack = currentTrack,
@@ -388,7 +405,7 @@ fun MainScreen(
                         onDeletePlaylist = { vm.deletePlaylist(it) }
                     )
                 }
-                2 -> TrackList(
+                3 -> TrackList(
                     tracks = offlineTracks,
                     currentTrack = currentTrack,
                     isPlaying = isPlaying,
@@ -403,7 +420,7 @@ fun MainScreen(
                     adminModeEnabled = adminModeEnabled,
                     onEditTrack = { trackToEdit = it }
                 )
-                3 -> SettingsScreen(
+                4 -> SettingsScreen(
                     currentLanguage = currentLanguage,
                     onLanguageChange = vm::setLanguage,
                     onRefreshCache = vm::refreshCache,

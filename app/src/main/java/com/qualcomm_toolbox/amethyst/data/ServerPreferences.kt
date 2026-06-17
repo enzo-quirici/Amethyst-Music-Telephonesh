@@ -34,6 +34,26 @@ class ServerPreferences(context: Context) {
             prefs.edit().putString(KEY_LANGUAGE, value).apply()
         }
 
+    /** Map of Genre -> Play count */
+    var recentGenrePlays: Map<String, Int>
+        get() {
+            val raw = prefs.getString(KEY_GENRE_PLAYS, null) ?: return emptyMap()
+            return raw.split(";").mapNotNull {
+                val parts = it.split(":")
+                if (parts.size == 2) parts[0] to (parts[1].toIntOrNull() ?: 0) else null
+            }.toMap()
+        }
+        set(value) {
+            val raw = value.entries.joinToString(";") { "${it.key}:${it.value}" }
+            prefs.edit().putString(KEY_GENRE_PLAYS, raw).apply()
+        }
+
+    fun recordGenrePlay(genre: String) {
+        val current = recentGenrePlays.toMutableMap()
+        current[genre] = (current[genre] ?: 0) + 1
+        recentGenrePlays = current
+    }
+
     val hasServer: Boolean get() = !serverUrl.isNullOrBlank()
 
     /** When true, accepts self-signed / invalid HTTPS certs (needed on some Android 6 devices). */
@@ -54,6 +74,7 @@ class ServerPreferences(context: Context) {
         private const val KEY_TRUST_ALL_CERTS = "trust_all_certs"
         private const val KEY_IS_ADMIN = "is_admin"
         private const val KEY_ADMIN_MODE_ENABLED = "admin_mode_enabled"
+        private const val KEY_GENRE_PLAYS = "genre_plays"
 
         fun normalizeServerUrl(raw: String): String {
             var url = raw.trim()

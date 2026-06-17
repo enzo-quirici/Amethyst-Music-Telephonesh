@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -155,6 +156,30 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _selectedTab = MutableStateFlow(0)
     val selectedTab: StateFlow<Int> = _selectedTab.asStateFlow()
+
+    private val _recentGenres = MutableStateFlow(prefs.recentGenrePlays)
+    
+    val homePopularTracks: StateFlow<List<Track>> = _tracks.map { tracks ->
+        tracks.sortedByDescending { it.playCount }.take(10)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val homeHiddenGems: StateFlow<List<Track>> = _tracks.map { tracks ->
+        tracks.filter { it.playCount < 5 }.shuffled().take(10)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val homeRecommendedTracks: StateFlow<List<Track>> = combine(_tracks, _recentGenres) { tracks, recent ->
+        if (recent.isEmpty()) {
+            tracks.shuffled().take(10)
+        } else {
+            val topGenres = recent.entries.sortedByDescending { it.value }.take(3).map { it.key }.toSet()
+            val recommended = tracks.filter { topGenres.contains(it.genre) }.shuffled().take(10)
+            if (recommended.size < 5) {
+                (recommended + tracks.filter { !topGenres.contains(it.genre) }.shuffled().take(10 - recommended.size)).distinct()
+            } else {
+                recommended
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _language = MutableStateFlow(prefs.language)
     val language: StateFlow<String> = _language.asStateFlow()
@@ -738,12 +763,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun playTrack(track: Track) {
         val queue = when (_selectedTab.value) {
-            2 -> filteredOfflineTracks.value.ifEmpty { offlineTracks.value }
+            3 -> filteredOfflineTracks.value.ifEmpty { offlineTracks.value }
             else -> filteredTracks.value.ifEmpty { tracks.value }
         }
         if (queue.isEmpty()) return
         val index = queue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
         musicPlayer.playQueue(queue, index) { playbackUrl(it) }
+        
+        prefs.recordGenrePlay(track.genre)
+        _recentGenres.value = prefs.recentGenrePlays
+
         if (!_offlineOnlyMode.value) {
             client?.let { purple ->
                 viewModelScope.launch(Dispatchers.IO) { purple.incrementPlay(track.id) }

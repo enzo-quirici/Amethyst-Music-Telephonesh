@@ -16,7 +16,7 @@ Amethyst Music is a modern, feature-rich Android music player client designed to
 
 Amethyst Music supports the following languages:
 
-- 🇺🇸 **English**
+- 🇺🇸 **English** (English)
 - 🇫🇷 **French** (Français)
 - 🇩🇪 **German** (Deutsch)
 - 🇮🇹 **Italian** (Italiano)
@@ -49,7 +49,5 @@ Amethyst Music supports the following languages:
 
 ## 📋 To-Do
 
-- [ ] Admin Features
 - [ ] UI Customization options
 - [ ] Bug Fixes
-- [ ] Comprehensive Testing
