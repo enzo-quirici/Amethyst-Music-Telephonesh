@@ -2,9 +2,13 @@
 
 Amethyst Music is a modern, feature-rich Android music player client designed to connect with **Purple Music** (SQLite) and **Amethyst Music** (MySQL) backends. Built with Jetpack Compose and Material 3, it offers a seamless and beautiful music streaming experience.
 
-![Amethyst Music Screenshot](Img_1.png)
-
 Full Release 1.0 Soon.
+
+## 📱 Screenshots
+
+| Home | Library | Playlist | Downloads | Settings |
+|------|---------|----------|-----------|----------|
+| ![Home](Home.png) | ![Library](Library.png) | ![Playlist](Playlist.png) | ![Downloads](Downloads.png) | ![Settings](Settings.png) |
 
 ## ✨ Features
 
