@@ -55,4 +55,4 @@ Amethyst Music supports the following languages:
 ## 📋 To-Do
 
 - [ ] Bug Fixes
-- [ ] Improved Tablet Support
+- [ ] Remove Songs From Playlists
