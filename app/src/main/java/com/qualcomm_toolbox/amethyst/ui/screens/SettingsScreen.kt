@@ -254,7 +254,7 @@ fun SettingsScreen(
         // Version Section
         SettingsSectionTitle(stringResource(R.string.version))
         Text(
-            text = "0.8",
+            text = "0.9",
             color = MaterialTheme.colorScheme.onSurface,
             fontSize = 16.sp,
             modifier = Modifier
