@@ -17,10 +17,12 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,7 @@ import com.qualcomm_toolbox.amethyst.R
 import com.qualcomm_toolbox.amethyst.data.Track
 import com.qualcomm_toolbox.amethyst.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     recommended: List<Track>,
@@ -55,55 +58,63 @@ fun HomeScreen(
     onAddToPlaylist: ((Track) -> Unit)? = null,
     adminModeEnabled: Boolean = false,
     onEditTrack: ((Track) -> Unit)? = null,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 80.dp)
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize()
     ) {
-        item {
-            HomeSection(
-                title = stringResource(R.string.home_for_you),
-                tracks = recommended,
-                coverUrlForTrack = coverUrlForTrack,
-                onTrackClick = onTrackClick,
-                downloadedIds = downloadedIds,
-                downloadingIds = downloadingIds,
-                onDownload = onDownload,
-                onRemoveDownload = onRemoveDownload,
-                onAddToPlaylist = onAddToPlaylist,
-                adminModeEnabled = adminModeEnabled,
-                onEditTrack = onEditTrack
-            )
-        }
-        item {
-            HomeSection(
-                title = stringResource(R.string.home_popular),
-                tracks = popular,
-                coverUrlForTrack = coverUrlForTrack,
-                onTrackClick = onTrackClick,
-                downloadedIds = downloadedIds,
-                downloadingIds = downloadingIds,
-                onDownload = onDownload,
-                onRemoveDownload = onRemoveDownload,
-                onAddToPlaylist = onAddToPlaylist,
-                adminModeEnabled = adminModeEnabled,
-                onEditTrack = onEditTrack
-            )
-        }
-        item {
-            HomeSection(
-                title = stringResource(R.string.home_hidden_gems),
-                tracks = hiddenGems,
-                coverUrlForTrack = coverUrlForTrack,
-                onTrackClick = onTrackClick,
-                downloadedIds = downloadedIds,
-                downloadingIds = downloadingIds,
-                onDownload = onDownload,
-                onRemoveDownload = onRemoveDownload,
-                onAddToPlaylist = onAddToPlaylist,
-                adminModeEnabled = adminModeEnabled,
-                onEditTrack = onEditTrack
-            )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 80.dp)
+        ) {
+            item {
+                HomeSection(
+                    title = stringResource(R.string.home_for_you),
+                    tracks = recommended,
+                    coverUrlForTrack = coverUrlForTrack,
+                    onTrackClick = onTrackClick,
+                    downloadedIds = downloadedIds,
+                    downloadingIds = downloadingIds,
+                    onDownload = onDownload,
+                    onRemoveDownload = onRemoveDownload,
+                    onAddToPlaylist = onAddToPlaylist,
+                    adminModeEnabled = adminModeEnabled,
+                    onEditTrack = onEditTrack
+                )
+            }
+            item {
+                HomeSection(
+                    title = stringResource(R.string.home_popular),
+                    tracks = popular,
+                    coverUrlForTrack = coverUrlForTrack,
+                    onTrackClick = onTrackClick,
+                    downloadedIds = downloadedIds,
+                    downloadingIds = downloadingIds,
+                    onDownload = onDownload,
+                    onRemoveDownload = onRemoveDownload,
+                    onAddToPlaylist = onAddToPlaylist,
+                    adminModeEnabled = adminModeEnabled,
+                    onEditTrack = onEditTrack
+                )
+            }
+            item {
+                HomeSection(
+                    title = stringResource(R.string.home_hidden_gems),
+                    tracks = hiddenGems,
+                    coverUrlForTrack = coverUrlForTrack,
+                    onTrackClick = onTrackClick,
+                    downloadedIds = downloadedIds,
+                    downloadingIds = downloadingIds,
+                    onDownload = onDownload,
+                    onRemoveDownload = onRemoveDownload,
+                    onAddToPlaylist = onAddToPlaylist,
+                    adminModeEnabled = adminModeEnabled,
+                    onEditTrack = onEditTrack
+                )
+            }
         }
     }
 }

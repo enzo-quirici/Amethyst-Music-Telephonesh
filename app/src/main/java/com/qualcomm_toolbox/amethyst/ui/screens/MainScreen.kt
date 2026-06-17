@@ -378,7 +378,9 @@ fun MainScreen(
                     onRemoveDownload = onRemoveDownload,
                     onAddToPlaylist = { vm.showAddToPlaylist(it) },
                     adminModeEnabled = adminModeEnabled,
-                    onEditTrack = { trackToEdit = it }
+                    onEditTrack = { trackToEdit = it },
+                    isRefreshing = isLoading,
+                    onRefresh = onRefresh
                 )
                 1 -> TrackList(
                     tracks = tracks,

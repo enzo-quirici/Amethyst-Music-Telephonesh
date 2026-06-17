@@ -97,6 +97,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _genres = MutableStateFlow<List<String>>(emptyList())
     val genres: StateFlow<List<String>> = _genres.asStateFlow()
 
+    private val _homeRecommended = MutableStateFlow<List<Track>>(emptyList())
+    val homeRecommendedTracks: StateFlow<List<Track>> = _homeRecommended.asStateFlow()
+
+    private val _homePopular = MutableStateFlow<List<Track>>(emptyList())
+    val homePopularTracks: StateFlow<List<Track>> = _homePopular.asStateFlow()
+
+    private val _homeHiddenGems = MutableStateFlow<List<Track>>(emptyList())
+    val homeHiddenGems: StateFlow<List<Track>> = _homeHiddenGems.asStateFlow()
+
     private val _selectedGenres = MutableStateFlow<Set<String>>(emptySet())
     val selectedGenres: StateFlow<Set<String>> = _selectedGenres.asStateFlow()
 
@@ -159,27 +168,26 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _recentGenres = MutableStateFlow(prefs.recentGenrePlays)
     
-    val homePopularTracks: StateFlow<List<Track>> = _tracks.map { tracks ->
-        tracks.sortedByDescending { it.playCount }.take(10)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    private fun refreshHomeSections() {
+        val allTracks = _tracks.value
+        if (allTracks.isEmpty()) return
 
-    val homeHiddenGems: StateFlow<List<Track>> = _tracks.map { tracks ->
-        tracks.filter { it.playCount < 5 }.shuffled().take(10)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
-    val homeRecommendedTracks: StateFlow<List<Track>> = combine(_tracks, _recentGenres) { tracks, recent ->
+        _homePopular.value = allTracks.sortedByDescending { it.playCount }.take(10)
+        _homeHiddenGems.value = allTracks.filter { it.playCount < 5 }.shuffled().take(10)
+        
+        val recent = _recentGenres.value
         if (recent.isEmpty()) {
-            tracks.shuffled().take(10)
+            _homeRecommended.value = allTracks.shuffled().take(10)
         } else {
             val topGenres = recent.entries.sortedByDescending { it.value }.take(3).map { it.key }.toSet()
-            val recommended = tracks.filter { topGenres.contains(it.genre) }.shuffled().take(10)
+            val recommended = allTracks.filter { topGenres.contains(it.genre) }.shuffled().take(10)
             if (recommended.size < 5) {
-                (recommended + tracks.filter { !topGenres.contains(it.genre) }.shuffled().take(10 - recommended.size)).distinct()
+                _homeRecommended.value = (recommended + allTracks.filter { !topGenres.contains(it.genre) }.shuffled().take(10 - recommended.size)).distinct()
             } else {
-                recommended
+                _homeRecommended.value = recommended
             }
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }
 
     private val _language = MutableStateFlow(prefs.language)
     val language: StateFlow<String> = _language.asStateFlow()
@@ -651,6 +659,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 
                 _genres.value = purple.fetchGenres()
+                refreshHomeSections()
                 refreshOfflineState()
             } catch (e: Exception) {
                 _error.value = e.message ?: getString(R.string.error_load_failed)
