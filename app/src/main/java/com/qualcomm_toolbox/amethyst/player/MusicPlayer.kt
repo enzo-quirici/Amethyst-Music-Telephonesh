@@ -83,8 +83,12 @@ class MusicPlayer(private val appContext: Context) {
     private val _durationMs = MutableStateFlow(0L)
     val durationMs: StateFlow<Long> = _durationMs.asStateFlow()
 
-    var queue: List<Track> = emptyList()
-        private set
+    private val _queue = MutableStateFlow<List<Track>>(emptyList())
+    val queueFlow: StateFlow<List<Track>> = _queue.asStateFlow()
+    var queue: List<Track>
+        get() = _queue.value
+        private set(value) { _queue.value = value }
+
     private var queueIndex = 0
     private val _loopMode = MutableStateFlow(0)
     val loopModeFlow: StateFlow<Int> = _loopMode.asStateFlow()
@@ -190,6 +194,8 @@ class MusicPlayer(private val appContext: Context) {
         exoPlayer.addListener(listener)
         exoPlayer.addAnalyticsListener(analyticsListener)
         equalizerManager.onAudioSessionIdChanged(exoPlayer.audioSessionId)
+        // Ensure shuffle is OFF by default on every app start
+        setShuffle(false)
         castPlayer // initialize
         attachToSession()
     }

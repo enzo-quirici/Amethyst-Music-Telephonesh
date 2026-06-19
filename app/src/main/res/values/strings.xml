@@ -130,4 +130,6 @@
     <string name="tracks_count">%1$d tracks</string>
     <string name="genre_other">Other</string>
     <string name="exit_fullscreen">Exit Fullscreen</string>
+    <string name="up_next">Up Next</string>
+    <string name="queue">Queue</string>
 </resources>

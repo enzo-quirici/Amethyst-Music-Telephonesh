@@ -36,8 +36,10 @@ import coil.compose.AsyncImage
 import com.qualcomm_toolbox.amethyst.AppViewModel
 import com.qualcomm_toolbox.amethyst.R
 import com.qualcomm_toolbox.amethyst.data.Track
+import com.qualcomm_toolbox.amethyst.ui.components.TrackRow
 import com.qualcomm_toolbox.amethyst.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FullPlayerScreen(
     track: Track,
@@ -51,6 +53,9 @@ fun FullPlayerScreen(
     parsedLyrics: List<AppViewModel.LyricLine>,
     isLoadingLyrics: Boolean,
     showLyrics: Boolean,
+    queue: List<Track>,
+    downloadedIds: Set<Int>,
+    downloadingIds: Set<Int>,
     onClose: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
@@ -60,9 +65,14 @@ fun FullPlayerScreen(
     onToggleShuffle: () -> Unit,
     onToggleLyrics: () -> Unit,
     onAddToPlaylist: () -> Unit,
+    onPlayTrackAt: (Int) -> Unit,
+    onDownload: (Track) -> Unit,
+    onAddToPlaylistForTrack: (Track) -> Unit,
+    coverUrlProvider: (Track) -> String?,
 ) {
     var isLyricsMaximized by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf<Float?>(null) }
+    var showQueue by remember { mutableStateOf(false) }
 
     // Smooth position interpolation
     var smoothedPositionMs by remember(positionMs) { mutableLongStateOf(positionMs) }
@@ -388,6 +398,90 @@ fun FullPlayerScreen(
                         ) {
                             Icon(Icons.Default.FullscreenExit, contentDescription = stringResource(R.string.exit_fullscreen), tint = AmethystText)
                         }
+                    }
+                }
+            }
+            
+            if (!isLyricsMaximized) {
+                // Bottom Handle for Queue
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                        .clickable { showQueue = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.KeyboardArrowUp,
+                            contentDescription = null,
+                            tint = AmethystText.copy(alpha = 0.5f)
+                        )
+                        Text(
+                            text = stringResource(R.string.up_next),
+                            color = AmethystText.copy(alpha = 0.5f),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showQueue) {
+        val currentIndex = queue.indexOfFirst { it.id == track.id }
+        val upcomingTracks = if (currentIndex != -1 && currentIndex < queue.size - 1) {
+            queue.subList(currentIndex + 1, queue.size)
+        } else {
+            emptyList()
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = { showQueue = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = MaterialTheme.colorScheme.background,
+        ) {
+            Column(modifier = Modifier.fillMaxHeight(0.9f)) {
+                Text(
+                    text = stringResource(R.string.queue),
+                    modifier = Modifier.padding(16.dp),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AmethystText
+                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 32.dp, start = 16.dp, end = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (upcomingTracks.isEmpty()) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                                Text(stringResource(R.string.no_tracks_found), color = AmethystTextMuted)
+                            }
+                        }
+                    }
+
+                    itemsIndexed(upcomingTracks) { index, qTrack ->
+                        val absoluteIndex = currentIndex + 1 + index
+                        TrackRow(
+                            track = qTrack,
+                            isCurrent = false,
+                            isPlaying = false,
+                            cover = coverUrlProvider(qTrack),
+                            isDownloaded = downloadedIds.contains(qTrack.id),
+                            isDownloading = downloadingIds.contains(qTrack.id),
+                            downloadProgress = null,
+                            showDownloadActions = true,
+                            onClick = {
+                                onPlayTrackAt(absoluteIndex)
+                                showQueue = false
+                            },
+                            onDownload = { onDownload(qTrack) },
+                            onRemoveDownload = { /* handle removal if needed */ },
+                            onAddToPlaylist = { onAddToPlaylistForTrack(qTrack) }
+                        )
                     }
                 }
             }

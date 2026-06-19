@@ -238,6 +238,9 @@ class MainActivity : AppCompatActivity() {
                                     val parsedLyrics by vm.parsedLyrics.collectAsState()
                                     val isLoadingLyrics by vm.isLoadingLyrics.collectAsState()
                                     val showLyrics by vm.showLyrics.collectAsState()
+                                    val queue by vm.musicPlayer.queueFlow.collectAsState()
+                                    val downloadedIds by vm.downloadedIds.collectAsState()
+                                    val downloadingIds by vm.downloadingIds.collectAsState()
 
                                     FullPlayerScreen(
                                         track = track,
@@ -251,6 +254,9 @@ class MainActivity : AppCompatActivity() {
                                         parsedLyrics = parsedLyrics,
                                         isLoadingLyrics = isLoadingLyrics,
                                         showLyrics = showLyrics,
+                                        queue = queue,
+                                        downloadedIds = downloadedIds,
+                                        downloadingIds = downloadingIds,
                                         onClose = vm::closeFullPlayer,
                                         onPlayPause = vm::togglePlayPause,
                                         onNext = vm::nextTrack,
@@ -260,6 +266,10 @@ class MainActivity : AppCompatActivity() {
                                         onToggleShuffle = { vm.toggleShuffle() },
                                         onToggleLyrics = vm::toggleLyrics,
                                         onAddToPlaylist = { vm.showAddToPlaylist(track) },
+                                        onPlayTrackAt = { vm.playTrackAt(it) },
+                                        onDownload = { vm.downloadTrack(it) },
+                                        onAddToPlaylistForTrack = { vm.showAddToPlaylist(it) },
+                                        coverUrlProvider = { vm.coverUrlForTrack(it) },
                                     )
                                 }
                             }

@@ -798,7 +798,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun playTrack(track: Track) {
-        val queue = when (_selectedTab.value) {
+        val currentTab = _selectedTab.value
+        val queue = when (currentTab) {
+            0 -> tracks.value // For Home, use ALL tracks as context for the queue
             3 -> filteredOfflineTracks.value.ifEmpty { offlineTracks.value }
             else -> filteredTracks.value.ifEmpty { tracks.value }
         }
@@ -806,12 +808,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val index = queue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
         musicPlayer.playQueue(queue, index) { playbackUrl(it) }
         
-        // Handle "True Random" requirements
-        when (_selectedTab.value) {
-            0 -> musicPlayer.setShuffle(true, forceReshuffle = true) // Home page: True Random
-            1 -> musicPlayer.setShuffle(false) // Library: Sorted Order
-        }
-
+        // Remove automatic shuffle trigger - shuffle should only be manual
         prefs.recordGenrePlay(track.genre)
         _recentGenres.value = prefs.recentGenrePlays
 
@@ -980,6 +977,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 _isLoading.value = false
             }
         }
+    }
+
+    fun playTrackAt(index: Int) {
+        musicPlayer.playTrackAt(index) { playbackUrl(it) }
     }
 
     fun togglePlayPause() = musicPlayer.togglePlayPause()
