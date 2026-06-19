@@ -799,16 +799,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun playTrack(track: Track) {
         val currentTab = _selectedTab.value
-        val queue = when (currentTab) {
-            0 -> tracks.value // For Home, use ALL tracks as context for the queue
+        val baseQueue = when (currentTab) {
+            0 -> _tracks.value.shuffled() // Home: always random, changes each click
             3 -> filteredOfflineTracks.value.ifEmpty { offlineTracks.value }
             else -> filteredTracks.value.ifEmpty { tracks.value }
         }
-        if (queue.isEmpty()) return
-        val index = queue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
-        musicPlayer.playQueue(queue, index) { playbackUrl(it) }
-        
-        // Remove automatic shuffle trigger - shuffle should only be manual
+        if (baseQueue.isEmpty()) return
+        val index = baseQueue.indexOfFirst { it.id == track.id }.coerceAtLeast(0)
+        musicPlayer.playQueue(baseQueue, index) { playbackUrl(it) }
         prefs.recordGenrePlay(track.genre)
         _recentGenres.value = prefs.recentGenrePlays
 
@@ -983,6 +981,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         musicPlayer.playTrackAt(index) { playbackUrl(it) }
     }
 
+    // The ordered list currently loaded into the player (shuffled or not)
+    val activeQueue get() = musicPlayer.activeQueueFlow
+
     fun togglePlayPause() = musicPlayer.togglePlayPause()
 
     fun nextTrack() {
@@ -1004,7 +1005,32 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleLoop() = musicPlayer.toggleLoop()
 
-    fun toggleShuffle() = musicPlayer.toggleShuffle()
+    fun toggleShuffle() {
+        val currentlyShuffled = musicPlayer.shuffle
+        if (!currentlyShuffled) {
+            // Turning shuffle ON: expand the queue to ALL server tracks (shuffled),
+            // keeping the current track playing where it is.
+            val allTracks = if (_offlineOnlyMode.value) {
+                offlineTracks.value
+            } else {
+                _tracks.value
+            }
+            val currentTrack = musicPlayer.currentTrack.value
+            if (allTracks.isNotEmpty() && currentTrack != null) {
+                // Build a shuffled list with current track first
+                val rest = allTracks.toMutableList().also { list ->
+                    val idx = list.indexOfFirst { it.id == currentTrack.id }
+                    if (idx >= 0) list.removeAt(idx)
+                }.shuffled()
+                val newQueue = listOf(currentTrack) + rest
+                musicPlayer.playQueue(newQueue, 0) { playbackUrl(it) }
+                // Now enable shuffle (queue is already in shuffled order, so forceReshuffle=false)
+                musicPlayer.setShuffle(true, forceReshuffle = false)
+                return
+            }
+        }
+        musicPlayer.toggleShuffle()
+    }
 
     private fun startProgressUpdates() {
         progressJob?.cancel()

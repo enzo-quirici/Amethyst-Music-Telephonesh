@@ -238,7 +238,7 @@ class MainActivity : AppCompatActivity() {
                                     val parsedLyrics by vm.parsedLyrics.collectAsState()
                                     val isLoadingLyrics by vm.isLoadingLyrics.collectAsState()
                                     val showLyrics by vm.showLyrics.collectAsState()
-                                    val queue by vm.musicPlayer.queueFlow.collectAsState()
+                                    val queue by vm.musicPlayer.activeQueueFlow.collectAsState()
                                     val downloadedIds by vm.downloadedIds.collectAsState()
                                     val downloadingIds by vm.downloadingIds.collectAsState()
 

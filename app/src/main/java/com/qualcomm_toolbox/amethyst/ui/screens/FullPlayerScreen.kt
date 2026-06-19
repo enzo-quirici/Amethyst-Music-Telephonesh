@@ -430,12 +430,7 @@ fun FullPlayerScreen(
     }
 
     if (showQueue) {
-        val currentIndex = queue.indexOfFirst { it.id == track.id }
-        val upcomingTracks = if (currentIndex != -1 && currentIndex < queue.size - 1) {
-            queue.subList(currentIndex + 1, queue.size)
-        } else {
-            emptyList()
-        }
+        val currentIdx = queue.indexOfFirst { it.id == track.id }
 
         ModalBottomSheet(
             onDismissRequest = { showQueue = false },
@@ -450,12 +445,17 @@ fun FullPlayerScreen(
                     fontWeight = FontWeight.Bold,
                     color = AmethystText
                 )
+                val queueListState = rememberLazyListState()
+                LaunchedEffect(currentIdx) {
+                    if (currentIdx >= 0) queueListState.animateScrollToItem(currentIdx)
+                }
                 LazyColumn(
+                    state = queueListState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 32.dp, start = 16.dp, end = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (upcomingTracks.isEmpty()) {
+                    if (queue.isEmpty()) {
                         item {
                             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                                 Text(stringResource(R.string.no_tracks_found), color = AmethystTextMuted)
@@ -463,23 +463,23 @@ fun FullPlayerScreen(
                         }
                     }
 
-                    itemsIndexed(upcomingTracks) { index, qTrack ->
-                        val absoluteIndex = currentIndex + 1 + index
+                    itemsIndexed(queue) { index, qTrack ->
+                        val isCurrent = qTrack.id == track.id
                         TrackRow(
                             track = qTrack,
-                            isCurrent = false,
-                            isPlaying = false,
+                            isCurrent = isCurrent,
+                            isPlaying = isCurrent && isPlaying,
                             cover = coverUrlProvider(qTrack),
                             isDownloaded = downloadedIds.contains(qTrack.id),
                             isDownloading = downloadingIds.contains(qTrack.id),
                             downloadProgress = null,
                             showDownloadActions = true,
                             onClick = {
-                                onPlayTrackAt(absoluteIndex)
+                                onPlayTrackAt(index)
                                 showQueue = false
                             },
                             onDownload = { onDownload(qTrack) },
-                            onRemoveDownload = { /* handle removal if needed */ },
+                            onRemoveDownload = { },
                             onAddToPlaylist = { onAddToPlaylistForTrack(qTrack) }
                         )
                     }

@@ -17,7 +17,6 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.ShuffleOrder
 import com.qualcomm_toolbox.amethyst.data.Track
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -89,7 +88,16 @@ class MusicPlayer(private val appContext: Context) {
         get() = _queue.value
         private set(value) { _queue.value = value }
 
+    // The active playback order: shuffledQueue when shuffle is on, queue otherwise
+    private val _activeQueue = MutableStateFlow<List<Track>>(emptyList())
+    val activeQueueFlow: StateFlow<List<Track>> = _activeQueue.asStateFlow()
+
     private var queueIndex = 0
+
+    // Manual shuffle: pre-generated shuffled order so we never reshuffle mid-queue
+    private var shuffledQueue: List<Track> = emptyList()
+    private var shuffleIndex = 0   // position within shuffledQueue
+
     private val _loopMode = MutableStateFlow(0)
     val loopModeFlow: StateFlow<Int> = _loopMode.asStateFlow()
     var loopMode: Int
@@ -164,10 +172,21 @@ class MusicPlayer(private val appContext: Context) {
             // Keep our currentTrack / queueIndex in sync when ExoPlayer advances
             // the playlist natively (e.g. via notification next/prev buttons).
             val newIndex = currentPlayer.currentMediaItemIndex
-            if (newIndex != queueIndex && newIndex in queue.indices) {
-                queueIndex = newIndex
-                _currentTrack.value = queue[queueIndex]
-                incrementPlayCallback?.invoke(queue[queueIndex].id)
+            if (shuffle) {
+                // In shuffle mode ExoPlayer plays a flat shuffled list, so newIndex maps
+                // directly into shuffledQueue.
+                if (newIndex != shuffleIndex && newIndex in shuffledQueue.indices) {
+                    shuffleIndex = newIndex
+                    queueIndex = queue.indexOf(shuffledQueue[shuffleIndex]).coerceAtLeast(0)
+                    _currentTrack.value = shuffledQueue[shuffleIndex]
+                    incrementPlayCallback?.invoke(shuffledQueue[shuffleIndex].id)
+                }
+            } else {
+                if (newIndex != queueIndex && newIndex in queue.indices) {
+                    queueIndex = newIndex
+                    _currentTrack.value = queue[queueIndex]
+                    incrementPlayCallback?.invoke(queue[queueIndex].id)
+                }
             }
         }
 
@@ -195,7 +214,8 @@ class MusicPlayer(private val appContext: Context) {
         exoPlayer.addAnalyticsListener(analyticsListener)
         equalizerManager.onAudioSessionIdChanged(exoPlayer.audioSessionId)
         // Ensure shuffle is OFF by default on every app start
-        setShuffle(false)
+        shuffle = false
+        currentPlayer.shuffleModeEnabled = false
         castPlayer // initialize
         attachToSession()
     }
@@ -272,29 +292,61 @@ class MusicPlayer(private val appContext: Context) {
         queueIndex = startIndex.coerceIn(0, (tracks.size - 1).coerceAtLeast(0))
         if (tracks.isEmpty()) return
 
-        // Load the entire queue into ExoPlayer so notification controls work natively
-        val mediaItems = tracks.map { buildMediaItem(it, streamUrl(it)) }
-        currentPlayer.setMediaItems(mediaItems, queueIndex, 0L)
+        if (shuffle) {
+            // Build a shuffled list starting from the chosen track so it plays first
+            val start = tracks[queueIndex]
+            val rest = tracks.toMutableList().also { it.removeAt(queueIndex) }.shuffled()
+            shuffledQueue = listOf(start) + rest
+            shuffleIndex = 0
+
+            val mediaItems = shuffledQueue.map { buildMediaItem(it, streamUrl(it)) }
+            currentPlayer.setMediaItems(mediaItems, 0, 0L)
+        } else {
+            shuffledQueue = emptyList()
+            shuffleIndex = 0
+            val mediaItems = tracks.map { buildMediaItem(it, streamUrl(it)) }
+            currentPlayer.setMediaItems(mediaItems, queueIndex, 0L)
+        }
+
+        // Always keep ExoPlayer shuffle OFF – we manage the order ourselves
+        currentPlayer.shuffleModeEnabled = false
+
         currentPlayer.prepare()
         currentPlayer.play()
 
-        _currentTrack.value = tracks[queueIndex]
+        _currentTrack.value = if (shuffle) shuffledQueue[0] else tracks[queueIndex]
         _isPlaying.value = true
+        _activeQueue.value = if (shuffle) shuffledQueue else tracks
         startPlaybackService()
     }
 
     fun playTrackAt(index: Int, streamUrl: (Track) -> String) {
         if (queue.isEmpty()) return
-        queueIndex = index.coerceIn(0, queue.lastIndex)
-        _currentTrack.value = queue[queueIndex]
 
-        // Seek within the already-loaded playlist when possible
-        if (currentPlayer.mediaItemCount == queue.size) {
-            currentPlayer.seekTo(queueIndex, 0L)
+        if (shuffle && shuffledQueue.isNotEmpty()) {
+            // index refers to position in shuffledQueue
+            shuffleIndex = index.coerceIn(0, shuffledQueue.lastIndex)
+            queueIndex = queue.indexOf(shuffledQueue[shuffleIndex]).coerceAtLeast(0)
+            _currentTrack.value = shuffledQueue[shuffleIndex]
+
+            if (currentPlayer.mediaItemCount == shuffledQueue.size) {
+                currentPlayer.seekTo(shuffleIndex, 0L)
+            } else {
+                val mediaItems = shuffledQueue.map { buildMediaItem(it, streamUrl(it)) }
+                currentPlayer.setMediaItems(mediaItems, shuffleIndex, 0L)
+                currentPlayer.prepare()
+            }
         } else {
-            val mediaItems = queue.map { buildMediaItem(it, streamUrl(it)) }
-            currentPlayer.setMediaItems(mediaItems, queueIndex, 0L)
-            currentPlayer.prepare()
+            queueIndex = index.coerceIn(0, queue.lastIndex)
+            _currentTrack.value = queue[queueIndex]
+
+            if (currentPlayer.mediaItemCount == queue.size) {
+                currentPlayer.seekTo(queueIndex, 0L)
+            } else {
+                val mediaItems = queue.map { buildMediaItem(it, streamUrl(it)) }
+                currentPlayer.setMediaItems(mediaItems, queueIndex, 0L)
+                currentPlayer.prepare()
+            }
         }
         currentPlayer.play()
         _isPlaying.value = true
@@ -359,17 +411,57 @@ class MusicPlayer(private val appContext: Context) {
     }
 
     fun setShuffle(enabled: Boolean, forceReshuffle: Boolean = false) {
+        val wasEnabled = shuffle
         shuffle = enabled
-        if (enabled && forceReshuffle) {
-            reshuffle()
+
+        if (enabled) {
+            if (!wasEnabled || forceReshuffle) {
+                // Generate a fresh shuffled queue; keep current track first
+                val currentT = _currentTrack.value
+                if (queue.isNotEmpty() && currentT != null) {
+                    val rest = queue.toMutableList().also { list ->
+                        val idx = list.indexOfFirst { it.id == currentT.id }
+                        if (idx >= 0) list.removeAt(idx)
+                    }.shuffled()
+                    shuffledQueue = listOf(currentT) + rest
+                    shuffleIndex = 0
+
+                    // Reload ExoPlayer with the new shuffled order
+                    streamUrlProvider?.let { urlFor ->
+                        val mediaItems = shuffledQueue.map { buildMediaItem(it, urlFor(it)) }
+                        val wasPlaying = currentPlayer.isPlaying
+                        currentPlayer.setMediaItems(mediaItems, 0, currentPlayer.currentPosition)
+                        currentPlayer.prepare()
+                        if (wasPlaying) currentPlayer.play()
+                    }
+                    _activeQueue.value = shuffledQueue
+                }
+            }
+        } else {
+            // Switching shuffle OFF: revert to the canonical queue at current track
+            val currentT = _currentTrack.value
+            if (queue.isNotEmpty() && currentT != null) {
+                queueIndex = queue.indexOfFirst { it.id == currentT.id }.coerceAtLeast(0)
+                shuffledQueue = emptyList()
+                shuffleIndex = 0
+
+                streamUrlProvider?.let { urlFor ->
+                    val mediaItems = queue.map { buildMediaItem(it, urlFor(it)) }
+                    val wasPlaying = currentPlayer.isPlaying
+                    currentPlayer.setMediaItems(mediaItems, queueIndex, currentPlayer.currentPosition)
+                    currentPlayer.prepare()
+                    if (wasPlaying) currentPlayer.play()
+                }
+                _activeQueue.value = queue
+            }
         }
-        currentPlayer.shuffleModeEnabled = enabled
+
+        // Always keep ExoPlayer's own shuffle OFF; we manage order ourselves
+        currentPlayer.shuffleModeEnabled = false
     }
 
     fun reshuffle() {
-        if (queue.isNotEmpty()) {
-            exoPlayer.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(queue.size))
-        }
+        if (shuffle) setShuffle(enabled = true, forceReshuffle = true)
     }
 
     fun toggleShuffle(): Boolean {
