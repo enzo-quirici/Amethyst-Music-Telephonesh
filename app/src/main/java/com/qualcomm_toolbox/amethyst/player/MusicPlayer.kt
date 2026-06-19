@@ -17,6 +17,7 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.ShuffleOrder
 import com.qualcomm_toolbox.amethyst.data.Track
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -168,17 +169,9 @@ class MusicPlayer(private val appContext: Context) {
 
         override fun onPlaybackStateChanged(state: Int) {
             if (state == Player.STATE_ENDED) {
-                // ExoPlayer playlist exhausted – handle loop/stop
-                val urlProvider = streamUrlProvider ?: return
-                val increment = incrementPlayCallback ?: return
-                if (loopMode == 1) {
-                    // Loop all: seek back to beginning of playlist
-                    currentPlayer.seekTo(0, 0)
-                    currentPlayer.play()
-                    queueIndex = 0
-                    _currentTrack.value = queue.getOrNull(0)
-                    _currentTrack.value?.let { increment(it.id) }
-                } else {
+                // ExoPlayer playlist exhausted – handled natively by repeatMode.
+                // If repeatMode is OFF, we stop service.
+                if (currentPlayer.repeatMode == Player.REPEAT_MODE_OFF) {
                     currentPlayer.pause()
                     _isPlaying.value = false
                     stopPlaybackService()
@@ -320,23 +313,13 @@ class MusicPlayer(private val appContext: Context) {
 
     fun next(streamUrl: (Track) -> String) {
         if (queue.isEmpty()) return
-        if (loopMode == 2) {
-            seekTo(0)
+        if (currentPlayer.hasNextMediaItem()) {
+            currentPlayer.seekToNextMediaItem()
             currentPlayer.play()
             startPlaybackService()
-            return
-        }
-        if (queueIndex < queue.lastIndex) {
-            queueIndex++
-            currentPlayer.seekTo(queueIndex, 0L)
-            currentPlayer.play()
-            _currentTrack.value = queue[queueIndex]
-            startPlaybackService()
-        } else if (loopMode == 1) {
-            queueIndex = 0
+        } else if (currentPlayer.repeatMode == Player.REPEAT_MODE_ALL) {
             currentPlayer.seekTo(0, 0L)
             currentPlayer.play()
-            _currentTrack.value = queue[0]
             startPlaybackService()
         } else {
             currentPlayer.pause()
@@ -350,16 +333,17 @@ class MusicPlayer(private val appContext: Context) {
             seekTo(0)
             return
         }
-        queueIndex = if (queueIndex > 0) queueIndex - 1 else queue.lastIndex
-        currentPlayer.seekTo(queueIndex, 0L)
+        if (currentPlayer.hasPreviousMediaItem()) {
+            currentPlayer.seekToPreviousMediaItem()
+        } else {
+            currentPlayer.seekTo(queue.lastIndex, 0L)
+        }
         currentPlayer.play()
-        _currentTrack.value = queue[queueIndex]
         startPlaybackService()
     }
 
     fun toggleLoop(): Int {
         loopMode = (loopMode + 1) % 3
-        // Keep ExoPlayer repeat mode in sync
         currentPlayer.repeatMode = when (loopMode) {
             1 -> Player.REPEAT_MODE_ALL
             2 -> Player.REPEAT_MODE_ONE
@@ -368,9 +352,22 @@ class MusicPlayer(private val appContext: Context) {
         return loopMode
     }
 
+    fun setShuffle(enabled: Boolean, forceReshuffle: Boolean = false) {
+        shuffle = enabled
+        if (enabled && forceReshuffle) {
+            reshuffle()
+        }
+        currentPlayer.shuffleModeEnabled = enabled
+    }
+
+    fun reshuffle() {
+        if (queue.isNotEmpty()) {
+            exoPlayer.setShuffleOrder(ShuffleOrder.DefaultShuffleOrder(queue.size))
+        }
+    }
+
     fun toggleShuffle(): Boolean {
-        shuffle = !shuffle
-        currentPlayer.shuffleModeEnabled = shuffle
+        setShuffle(!shuffle, forceReshuffle = true)
         return shuffle
     }
 
