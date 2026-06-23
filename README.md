@@ -13,6 +13,9 @@ Full Release 1.0 Soon.
 ## ✨ Features
 
 - 🎵 **High-Quality Playback**: Powered by Android Media3 (ExoPlayer).
+- 📺 **Google Cast Support**: Cast your music to any compatible device seamlessly.
+- 🎤 **Synchronized Lyrics**: Enjoy real-time, synchronized lyrics for a deeper connection with your music.
+- 🎚️ **Built-in Equalizer**: Fine-tune your audio with a 5-band equalizer and bass boost.
 - 📥 **Offline Mode**: Download your favorite tracks and listen without an internet connection.
 - 🎨 **Customizable Themes**: Personalize your experience with multiple presets including AMOLED, Midnight, Forest, and Crimson, or use Dynamic colors.
 - 🌍 **Multi-language Support**: Fully translated into 11 languages.
@@ -42,9 +45,9 @@ Amethyst Music supports the following languages:
 - **UI**: Jetpack Compose, Material 3
 - **Navigation**: Compose Navigation
 - **Image Loading**: Coil
-- **Media**: Android Media3 (ExoPlayer, MediaSession)
+- **Media**: Android Media3 (ExoPlayer, MediaSession, Cast)
 - **Networking**: OkHttp
-- **Architecture**: MVVM with ViewModel and LiveData/StateFlow
+- **Architecture**: MVVM with ViewModel and Kotlin Coroutines/Flow
 
 ## 🚀 Getting Started
 
