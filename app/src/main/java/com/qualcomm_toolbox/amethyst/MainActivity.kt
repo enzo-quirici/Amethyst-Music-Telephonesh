@@ -35,6 +35,7 @@ import com.qualcomm_toolbox.amethyst.data.ServerPreferences
 import com.qualcomm_toolbox.amethyst.ui.components.AddToPlaylistDialog
 import com.qualcomm_toolbox.amethyst.ui.screens.EqualizerScreen
 import com.qualcomm_toolbox.amethyst.ui.screens.FullPlayerScreen
+import com.qualcomm_toolbox.amethyst.ui.screens.BulkDownloadScreen
 import com.qualcomm_toolbox.amethyst.ui.screens.LoginScreen
 import com.qualcomm_toolbox.amethyst.ui.screens.MainScreen
 import com.qualcomm_toolbox.amethyst.ui.screens.ServerSetupScreen
@@ -235,6 +236,17 @@ class MainActivity : AppCompatActivity() {
                                                 vm.setUseHarmony(harmony)
                                             }
                                         },
+                                        onBulkDownload = remember(vm) { { vm.openBulkDownload() } },
+                                    )
+                                }
+                                AppScreen.BulkDownload -> {
+                                    val allTracks by vm.tracks.collectAsState()
+                                    val downloadedIds by vm.downloadedIds.collectAsState()
+                                    BulkDownloadScreen(
+                                        tracks = allTracks,
+                                        downloadedIds = downloadedIds,
+                                        onBack = { vm.closeBulkDownload() },
+                                        onConfirm = { vm.applyBulkDownload(it) }
                                     )
                                 }
                             }

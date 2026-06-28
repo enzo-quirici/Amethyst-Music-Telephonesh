@@ -148,6 +148,7 @@ fun MainScreen(
     backgroundColor: Long = 0xFF0F0C1D,
     useHarmony: Boolean = true,
     onThemeChange: (Long, Boolean) -> Unit = { _, _ -> },
+    onBulkDownload: () -> Unit = {},
 ) {
     val isOnline by vm.isOnline.collectAsState()
     val showOfflineConfirmation by vm.showOfflineConfirmation.collectAsState()
@@ -516,6 +517,7 @@ fun MainScreen(
                     onThemeChange = onThemeChange,
                     onRefreshCache = vm::refreshCache,
                     onOpenEqualizer = vm::openEqualizer,
+                    onBulkDownload = onBulkDownload,
                     isAdmin = isAdmin,
                     adminModeEnabled = adminModeEnabled,
                     onAdminModeChange = vm::setAdminModeEnabled

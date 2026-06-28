@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.viewModelScope
+import androidx.work.*
+import com.qualcomm_toolbox.amethyst.data.DownloadWorker
 import com.qualcomm_toolbox.amethyst.data.LyricsCache
 import com.qualcomm_toolbox.amethyst.data.OfflineLibrary
 import com.qualcomm_toolbox.amethyst.data.PersistentCookieJar
@@ -40,6 +42,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
@@ -47,6 +50,7 @@ enum class AppScreen {
     Setup,
     Login,
     Main,
+    BulkDownload,
 }
 
 enum class SortOrder {
@@ -61,9 +65,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = ServerPreferences(application)
     private val sessionPersistence = SessionPersistence(application)
     private val offlineLibrary = OfflineLibrary(application)
-    private val trackDownloader = TrackDownloader()
     private val lyricsCache = LyricsCache(application)
     private val networkObserver = NetworkObserver(application)
+    private val workManager = WorkManager.getInstance(application)
     private var cookieJar: PersistentCookieJar? = null
     private var client: PurpleClient? = null
     val musicPlayer = MusicPlayer(application)
@@ -287,6 +291,43 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         updatePlayerCallbacks()
         observeTrackChanges()
         observeNetwork()
+        observeWorkManager()
+    }
+
+    private fun observeWorkManager() {
+        viewModelScope.launch {
+            workManager.getWorkInfosByTagFlow("download_task").collectLatest { workInfos ->
+                val downloading = mutableSetOf<Int>()
+                val progressMap = mutableMapOf<Int, Float>()
+                var hasNewSuccess = false
+                
+                workInfos.forEach { info ->
+                    when (info.state) {
+                        WorkInfo.State.RUNNING -> {
+                            val index = info.progress.getInt("index", -1)
+                            val total = info.progress.getInt("total", 0)
+                            // We can't easily map back to all track IDs in the bulk task without storing them
+                            // but we can update the downloadingIds if we passed them.
+                            // For now, let's just refresh if state changed.
+                        }
+                        WorkInfo.State.SUCCEEDED -> {
+                            hasNewSuccess = true
+                        }
+                        WorkInfo.State.FAILED -> {
+                            val errorMsg = info.outputData.getString("error") ?: "Download failed"
+                            if (_error.value != errorMsg) {
+                                _error.value = errorMsg
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+
+                if (hasNewSuccess) {
+                    refreshOfflineState()
+                }
+            }
+        }
     }
 
     private fun observeNetwork() {
@@ -522,6 +563,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _showEqualizer.value = false
     }
 
+    fun openBulkDownload() {
+        _screen.value = AppScreen.BulkDownload
+    }
+
+    fun closeBulkDownload() {
+        _screen.value = AppScreen.Main
+    }
+
     fun showAddToPlaylist(track: Track) {
         _trackToAddToPlaylist.value = track
     }
@@ -753,44 +802,60 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun downloadTrack(track: Track) {
-        val purple = client ?: run {
-            _error.value = getString(R.string.error_login_required_download)
-            return
-        }
-        val server = currentServerUrl() ?: return
-        if (isDownloaded(track.id) || isDownloading(track.id)) return
+        downloadTracks(listOf(track))
+    }
 
-        viewModelScope.launch {
-            _downloadingIds.update { it + track.id }
-            _downloadProgress.update { it + (track.id to 0f) }
-            try {
-                withContext(Dispatchers.IO) {
-                    trackDownloader.download(
-                        httpClient = purple.okHttpClient,
-                        purple = purple,
-                        track = track,
-                        serverUrl = server,
-                        library = offlineLibrary,
-                        onProgress = { progress ->
-                            // Throttle progress updates
-                            if (progress % 0.08f < 0.01f || progress > 0.95f) {
-                                viewModelScope.launch(Dispatchers.Main) {
-                                    _downloadProgress.update { it + (track.id to progress) }
-                                }
-                            }
-                        },
-                    )
-                }
-                refreshOfflineState()
-            } catch (e: PurpleException) {
-                _error.value = e.message
-            } catch (e: Exception) {
-                _error.value = getString(R.string.error_download_failed, e.message ?: "")
-            } finally {
-                _downloadingIds.update { it - track.id }
-                _downloadProgress.update { it - track.id }
-            }
+    fun downloadTracks(tracks: List<Track>) {
+        val server = currentServerUrl() ?: return
+        val tracksToDownload = tracks.filter { !isDownloaded(it.id) }
+        if (tracksToDownload.isEmpty()) return
+
+        val tracksJson = JSONArray().apply {
+            tracksToDownload.forEach { put(it.toJson()) }
+        }.toString()
+
+        val inputData = workDataOf(
+            "tracks_json" to tracksJson,
+            "server_url" to server,
+            "username" to prefs.savedUsername,
+            "password" to sessionPersistence.savedPassword,
+            "trust_all" to prefs.trustAllCertificates
+        )
+
+        val request = OneTimeWorkRequestBuilder<DownloadWorker>()
+            .setInputData(inputData)
+            .addTag("download_task")
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+            )
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "bulk_download_${System.currentTimeMillis()}", // Unique name for each bulk request
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            request
+        )
+    }
+
+    fun applyBulkDownload(selectedIds: Set<Int>) {
+        val currentlyDownloaded = _downloadedIds.value
+        val toDownloadIds = selectedIds - currentlyDownloaded
+        val toRemoveIds = currentlyDownloaded - selectedIds
+
+        if (toDownloadIds.isNotEmpty()) {
+            val tracksToDownload = _tracks.value.filter { toDownloadIds.contains(it.id) }
+            downloadTracks(tracksToDownload)
         }
+
+        toRemoveIds.forEach { id ->
+            val track = _tracks.value.find { it.id == id }
+            if (track != null) removeDownload(track)
+        }
+        
+        closeBulkDownload()
     }
 
     fun uploadTrack(

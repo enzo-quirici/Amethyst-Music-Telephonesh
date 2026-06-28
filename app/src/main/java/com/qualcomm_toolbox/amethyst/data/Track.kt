@@ -26,6 +26,17 @@ data class Track(
             uploaderId = obj.optInt("uploader_id", 0)
         )
     }
+
+    fun toJson(): JSONObject = JSONObject()
+        .put("id", id)
+        .put("filename", filename)
+        .put("title", title)
+        .put("artist", artist)
+        .put("cover", cover)
+        .put("genre", genre)
+        .put("play_count", playCount)
+        .put("duration", duration)
+        .put("uploader_id", uploaderId)
 }
 
 data class Playlist(

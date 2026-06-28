@@ -167,13 +167,3 @@ class OfflineLibrary(context: Context) {
         }
     }
 }
-
-private fun Track.toJson(): JSONObject = JSONObject()
-    .put("id", id)
-    .put("filename", filename)
-    .put("title", title)
-    .put("artist", artist)
-    .put("cover", cover)
-    .put("genre", genre)
-    .put("play_count", playCount)
-    .put("duration", duration)

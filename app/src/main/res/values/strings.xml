@@ -48,6 +48,10 @@
     <string name="language_hindi">Hindi</string>
     <string name="language_mongolian">Mongolian</string>
     <string name="refresh_cache">Refresh Cache</string>
+    <string name="bulk_download">Bulk Download</string>
+    <string name="select_all">Select All</string>
+    <string name="deselect_all">Deselect All</string>
+    <string name="confirm_selection">Confirm Selection</string>
 
     <string name="login_required">Login required</string>
     <string name="username">Username</string>
