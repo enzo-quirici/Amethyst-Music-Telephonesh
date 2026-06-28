@@ -304,11 +304,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 workInfos.forEach { info ->
                     when (info.state) {
                         WorkInfo.State.RUNNING -> {
-                            val index = info.progress.getInt("index", -1)
-                            val total = info.progress.getInt("total", 0)
-                            // We can't easily map back to all track IDs in the bulk task without storing them
-                            // but we can update the downloadingIds if we passed them.
-                            // For now, let's just refresh if state changed.
+                            val trackIds = info.progress.getIntArray("track_ids")
+                            val currentId = info.progress.getInt("current_id", -1)
+                            val progress = info.progress.getFloat("progress", 0f)
+                            
+                            trackIds?.forEach { id -> 
+                                downloading.add(id)
+                                if (id == currentId) {
+                                    progressMap[id] = progress
+                                }
+                            }
                         }
                         WorkInfo.State.SUCCEEDED -> {
                             hasNewSuccess = true
@@ -322,7 +327,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         else -> {}
                     }
                 }
-
+                
+                _downloadingIds.value = downloading
+                _downloadProgress.value = progressMap
+                
                 if (hasNewSuccess) {
                     refreshOfflineState()
                 }
@@ -810,12 +818,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val tracksToDownload = tracks.filter { !isDownloaded(it.id) }
         if (tracksToDownload.isEmpty()) return
 
+        val trackIds = tracksToDownload.map { it.id }.toIntArray()
         val tracksJson = JSONArray().apply {
             tracksToDownload.forEach { put(it.toJson()) }
         }.toString()
 
         val inputData = workDataOf(
             "tracks_json" to tracksJson,
+            "track_ids" to trackIds,
             "server_url" to server,
             "username" to prefs.savedUsername,
             "password" to sessionPersistence.savedPassword,

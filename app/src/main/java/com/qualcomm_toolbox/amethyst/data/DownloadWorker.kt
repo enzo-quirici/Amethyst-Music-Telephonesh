@@ -17,6 +17,7 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
 
     override suspend fun doWork(): ListenableWorker.Result = withContext(Dispatchers.IO) {
         val tracksJson = inputData.getString("tracks_json") ?: return@withContext ListenableWorker.Result.failure()
+        val trackIds = inputData.getIntArray("track_ids") ?: return@withContext ListenableWorker.Result.failure()
         val serverUrl = inputData.getString("server_url") ?: return@withContext ListenableWorker.Result.failure()
         val username = inputData.getString("username")
         val password = inputData.getString("password")
@@ -58,10 +59,10 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
                     serverUrl = serverUrl,
                     library = library,
                     onProgress = { progress ->
-                        val overallProgress = (index + progress) / tracks.size
                         setProgressAsync(workDataOf(
-                            "progress" to overallProgress,
-                            "current_track" to track.title,
+                            "progress" to progress,
+                            "current_id" to track.id,
+                            "track_ids" to trackIds,
                             "index" to index,
                             "total" to tracks.size
                         ))
@@ -74,8 +75,8 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
             }
         }
 
-        if (failCount > 0) {
-            ListenableWorker.Result.failure(workDataOf("error" to "$failCount downloads failed"))
+        if (failCount > 0 && successCount == 0) {
+            ListenableWorker.Result.failure(workDataOf("error" to "All downloads failed"))
         } else {
             ListenableWorker.Result.success()
         }
