@@ -82,6 +82,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _isOnline = MutableStateFlow(true)
     val isOnline: StateFlow<Boolean> = _isOnline.asStateFlow()
 
+    private val _isAppInForeground = MutableStateFlow(false)
+    val isAppInForeground: StateFlow<Boolean> = _isAppInForeground.asStateFlow()
+
     private val _showNetworkMessage = Channel<String>(Channel.CONFLATED)
     val networkMessages = _showNetworkMessage.receiveAsFlow()
 
@@ -288,14 +291,28 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun observeNetwork() {
         viewModelScope.launch {
-            networkObserver.status.collect { status ->
+            networkObserver.status.collectLatest { status ->
                 val online = status == NetworkStatus.Available
                 _isOnline.value = online
                 
-                if (!online && _screen.value == AppScreen.Main && !_offlineOnlyMode.value && !hasDeclinedOfflineThisSession) {
-                    _showOfflineConfirmation.value = true
+                if (!online) {
+                    delay(3000) // Debounce network drops
+                    if (_screen.value == AppScreen.Main && !_offlineOnlyMode.value && !hasDeclinedOfflineThisSession) {
+                        // Only show popup if app is in foreground OR music is playing.
+                        // If music is paused and phone is locked (background), don't trigger.
+                        if (_isAppInForeground.value || musicPlayer.isPlaying.value) {
+                            _showOfflineConfirmation.value = true
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    fun setAppInForeground(foreground: Boolean) {
+        _isAppInForeground.value = foreground
+        if (foreground && !_isOnline.value && _screen.value == AppScreen.Main && !_offlineOnlyMode.value && !hasDeclinedOfflineThisSession) {
+            _showOfflineConfirmation.value = true
         }
     }
 
